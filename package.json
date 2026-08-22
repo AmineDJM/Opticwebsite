@@ -1,0 +1,59 @@
+{
+  "name": "optic-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "One engine, multiple brands, multiple independent optical e-commerce websites.",
+  "packageManager": "pnpm@10.33.0",
+  "engines": {
+    "node": ">=20.11.0"
+  },
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:unit": "vitest run",
+    "test:e2e": "pnpm --filter @optic/e2e test",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json,css,yaml,yml}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md,json,css,yaml,yml}\"",
+    "db:generate": "pnpm --filter @optic/database generate",
+    "db:migrate": "pnpm --filter @optic/database migrate",
+    "db:migrate:deploy": "pnpm --filter @optic/database migrate:deploy",
+    "db:push": "pnpm --filter @optic/database push",
+    "db:seed": "pnpm --filter @optic/database seed",
+    "db:reset": "pnpm --filter @optic/database reset",
+    "db:studio": "pnpm --filter @optic/database studio",
+    "export:site": "pnpm --filter @optic/exporter export",
+    "clean": "turbo run clean && rm -rf node_modules"
+  },
+  "devDependencies": {
+    "@optic/eslint-config": "workspace:*",
+    "@optic/typescript-config": "workspace:*",
+    "@types/node": "^22.10.5",
+    "prettier": "^3.4.2",
+    "prettier-plugin-tailwindcss": "^0.6.9",
+    "tsx": "^4.19.2",
+    "turbo": "^2.10.11",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  },
+  "prettier": {
+    "semi": true,
+    "singleQuote": false,
+    "trailingComma": "all",
+    "printWidth": 100,
+    "plugins": [
+      "prettier-plugin-tailwindcss"
+    ]
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@prisma/client",
+      "@prisma/engines",
+      "esbuild",
+      "prisma",
+      "sharp"
+    ]
+  }
+}

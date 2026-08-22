@@ -1,0 +1,1248 @@
+// ---------------------------------------------------------------------------
+// Optic Engine — data model
+//
+// Tenancy: every business entity carries `websiteId`. Uniqueness constraints are
+// always composite with `websiteId` so two brands may reuse the same slug/SKU.
+// Reference data shared by every brand (Algeria's wilayas/communes) is global.
+//
+// See docs/DATABASE.md for the reasoning behind each cluster.
+// ---------------------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================================================
+// PLATFORM — websites, themes, domains, platform identity
+// ===========================================================================
+
+enum WebsiteStatus {
+  DRAFT
+  ACTIVE
+  SUSPENDED
+  ARCHIVED
+}
+
+model Website {
+  id            String        @id @default(cuid())
+  slug          String        @unique
+  name          String
+  legalName     String?
+  tagline       String?
+  status        WebsiteStatus @default(DRAFT)
+  defaultLocale String        @default("fr")
+  locales       String[]      @default(["fr"])
+  currency      String        @default("DZD")
+  countryCode   String        @default("DZ")
+  timezone      String        @default("Africa/Algiers")
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  theme               Theme?
+  settings            SiteSettings?
+  analytics           AnalyticsConfiguration?
+  domains             Domain[]
+  memberships         Membership[]
+  roles               Role[]
+  featureFlags        FeatureFlag[]
+  categories          Category[]
+  brands              Brand[]
+  collections         Collection[]
+  products            Product[]
+  variants            ProductVariant[]
+  media               Media[]
+  pages               Page[]
+  menus               Menu[]
+  customers           Customer[]
+  carts               Cart[]
+  orders              Order[]
+  coupons             Coupon[]
+  shippingZones       ShippingZone[]
+  quizzes             Quiz[]
+  quizResults         QuizResult[]
+  visagismProfiles    VisagismProfile[]
+  recommendationRules RecommendationRule[]
+  favorites           Favorite[]
+  auditLogs           AuditLog[]
+  stockMovements      StockMovement[]
+  newsletter          NewsletterSubscriber[]
+  contactMessages     ContactMessage[]
+  exportJobs          ExportJob[]
+
+  @@index([status])
+}
+
+model Domain {
+  id         String    @id @default(cuid())
+  websiteId  String
+  hostname   String    @unique
+  isPrimary  Boolean   @default(false)
+  verifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId])
+}
+
+/// Design tokens for one website. Written by the generator, read by every app at
+/// request time and injected as CSS custom properties — no rebuild required.
+model Theme {
+  id             String   @id @default(cuid())
+  websiteId      String   @unique
+  preset         String   @default("modern")
+  /// Semantic colour ramp: primary/secondary/accent/background/surface/text/muted/success/warning/error
+  colors         Json
+  /// { heading, body, weights, scale }
+  typography     Json
+  /// { radius, density, buttonStyle, cardStyle, headerStyle, footerStyle, containerWidth }
+  layout         Json
+  /// Free-form overrides merged last (escape hatch for bespoke tokens)
+  customTokens   Json?
+  logoMediaId    String?
+  logoAltMediaId String?
+  faviconMediaId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+}
+
+/// Identity, contact, socials, commerce policy and SEO defaults for one website.
+model SiteSettings {
+  id           String   @id @default(cuid())
+  websiteId    String   @unique
+  contact      Json     @default("{}")
+  socials      Json     @default("{}")
+  commerce     Json     @default("{}")
+  seo          Json     @default("{}")
+  legal        Json     @default("{}")
+  announcement Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+}
+
+model FeatureFlag {
+  id        String  @id @default(cuid())
+  websiteId String
+  key       String
+  enabled   Boolean @default(false)
+  config    Json?
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, key])
+  @@index([websiteId])
+}
+
+model AnalyticsConfiguration {
+  id          String  @id @default(cuid())
+  websiteId   String  @unique
+  provider    String  @default("none")
+  ga4Id       String?
+  metaPixelId String?
+  gtmId       String?
+  extra       Json?
+  consentMode Boolean @default(true)
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+}
+
+// ===========================================================================
+// IDENTITY & ACCESS — platform users, memberships, RBAC, sessions
+// ===========================================================================
+
+model User {
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String
+  passwordHash    String
+  isPlatformAdmin Boolean   @default(false)
+  isActive        Boolean   @default(true)
+  lastLoginAt     DateTime?
+  failedAttempts  Int       @default(0)
+  lockedUntil     DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  memberships Membership[]
+  sessions    Session[]
+  auditLogs   AuditLog[]
+
+  @@index([isPlatformAdmin])
+}
+
+/// A user's access to one website, with exactly one role.
+model Membership {
+  id        String   @id @default(cuid())
+  userId    String
+  websiteId String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  role    Role    @relation(fields: [roleId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, websiteId])
+  @@index([websiteId])
+  @@index([roleId])
+}
+
+/// `websiteId = null` marks a system role template available to every website.
+model Role {
+  id          String   @id @default(cuid())
+  websiteId   String?
+  key         String
+  name        String
+  description String?
+  isSystem    Boolean  @default(false)
+  permissions String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  website     Website?     @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  memberships Membership[]
+
+  @@unique([websiteId, key])
+  @@index([websiteId])
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  userId     String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+// ===========================================================================
+// CUSTOMERS
+// ===========================================================================
+
+model Customer {
+  id               String    @id @default(cuid())
+  websiteId        String
+  email            String?
+  phone            String
+  firstName        String
+  lastName         String
+  passwordHash     String?
+  isGuest          Boolean   @default(true)
+  acceptsMarketing Boolean   @default(false)
+  locale           String?
+  lastLoginAt      DateTime?
+  failedAttempts   Int       @default(0)
+  lockedUntil      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  website          Website           @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  addresses        CustomerAddress[]
+  orders           Order[]
+  carts            Cart[]
+  favorites        Favorite[]
+  sessions         CustomerSession[]
+  quizResults      QuizResult[]
+  visagismProfiles VisagismProfile[]
+
+  @@unique([websiteId, email])
+  @@unique([websiteId, phone])
+  @@index([websiteId])
+  @@index([websiteId, createdAt])
+}
+
+model CustomerSession {
+  id         String   @id @default(cuid())
+  customerId String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+
+  @@index([customerId])
+  @@index([expiresAt])
+}
+
+model CustomerAddress {
+  id          String   @id @default(cuid())
+  customerId  String
+  label       String?
+  firstName   String
+  lastName    String
+  phone       String
+  phoneAlt    String?
+  wilayaCode  String
+  communeId   String?
+  addressLine String
+  landmark    String?
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  wilaya   Wilaya   @relation(fields: [wilayaCode], references: [code], onDelete: Restrict)
+  commune  Commune? @relation(fields: [communeId], references: [id], onDelete: SetNull)
+
+  @@index([customerId])
+}
+
+// ===========================================================================
+// CATALOGUE
+// ===========================================================================
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum Gender {
+  MEN
+  WOMEN
+  UNISEX
+  KIDS
+}
+
+enum AgeGroup {
+  ADULT
+  TEEN
+  CHILD
+}
+
+/// Fully administrable tree. The storefront never hardcodes a category.
+model Category {
+  id           String       @id @default(cuid())
+  websiteId    String
+  parentId     String?
+  slug         String
+  name         String
+  description  String?
+  imageMediaId String?
+  iconKey      String?
+  position     Int          @default(0)
+  isActive     Boolean      @default(true)
+  isIndexable  Boolean      @default(true)
+  /// Marks the functional family so generic logic (e.g. lens compatibility UI)
+  /// can adapt without hardcoding a slug. See CategoryKind.
+  kind         CategoryKind @default(GENERIC)
+  seo          Json?
+  translations Json?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  website  Website           @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  parent   Category?         @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children Category[]        @relation("CategoryTree")
+  products ProductCategory[]
+  image    Media?            @relation("CategoryImage", fields: [imageMediaId], references: [id], onDelete: SetNull)
+
+  @@unique([websiteId, slug])
+  @@index([websiteId, parentId, position])
+  @@index([websiteId, isActive])
+}
+
+enum CategoryKind {
+  GENERIC
+  OPTICAL_FRAMES
+  SUNGLASSES
+  SUN_LENSES
+  CONTACT_LENSES
+  ACCESSORIES
+}
+
+model Brand {
+  id           String   @id @default(cuid())
+  websiteId    String
+  slug         String
+  name         String
+  description  String?
+  story        String?
+  logoMediaId  String?
+  coverMediaId String?
+  isExclusive  Boolean  @default(false)
+  isFeatured   Boolean  @default(false)
+  position     Int      @default(0)
+  isActive     Boolean  @default(true)
+  seo          Json?
+  translations Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  website  Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  products Product[]
+  logo     Media?    @relation("BrandLogo", fields: [logoMediaId], references: [id], onDelete: SetNull)
+  cover    Media?    @relation("BrandCover", fields: [coverMediaId], references: [id], onDelete: SetNull)
+
+  @@unique([websiteId, slug])
+  @@index([websiteId, isActive])
+}
+
+model Collection {
+  id           String   @id @default(cuid())
+  websiteId    String
+  brandId      String?
+  slug         String
+  name         String
+  description  String?
+  coverMediaId String?
+  isActive     Boolean  @default(true)
+  position     Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  website  Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  products Product[]
+
+  @@unique([websiteId, slug])
+  @@index([websiteId])
+}
+
+model Product {
+  id               String        @id @default(cuid())
+  websiteId        String
+  brandId          String?
+  collectionId     String?
+  sku              String
+  reference        String?
+  slug             String
+  name             String
+  shortDescription String?
+  description      String?
+  status           ProductStatus @default(DRAFT)
+  gender           Gender        @default(UNISEX)
+  ageGroup         AgeGroup      @default(ADULT)
+
+  /// Prices are integers in the currency's minor unit (santeem for DZD).
+  priceCents        Int
+  comparePriceCents Int?
+  costCents         Int?
+
+  isNew        Boolean @default(false)
+  isBestseller Boolean @default(false)
+  isFeatured   Boolean @default(false)
+
+  /// Frame specification — all optional because contact lenses and sun lenses
+  /// share this table.
+  frameShape     String?
+  frameMaterial  String?
+  frameType      String?
+  frameFinish    String?
+  colorPrimary   String?
+  colorSecondary String?
+  lensWidthMm    Int?
+  bridgeWidthMm  Int?
+  templeLengthMm Int?
+  lensHeightMm   Int?
+  frameSize      String?
+  weightGrams    Int?
+
+  /// Lens compatibility (values from LensCompatibility)
+  lensCompatibility String[] @default([])
+
+  /// Visagism matching tags — consumed by @optic/recommendation.
+  recommendedFaceShapes String[] @default([])
+  recommendedColors     String[] @default([])
+  recommendedUndertones String[] @default([])
+  avoidFaceShapes       String[] @default([])
+  styleProfiles         String[] @default([])
+
+  /// Contact-lens / sun-lens specifics
+  lensAttributes Json?
+
+  seo          Json?
+  translations Json?
+  publishedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  website    Website           @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  brand      Brand?            @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  collection Collection?       @relation(fields: [collectionId], references: [id], onDelete: SetNull)
+  categories ProductCategory[]
+  variants   ProductVariant[]
+  images     ProductImage[]
+  favorites  Favorite[]
+  orderItems OrderItem[]
+  cartItems  CartItem[]
+
+  @@unique([websiteId, slug])
+  @@unique([websiteId, sku])
+  @@index([websiteId, status, publishedAt])
+  @@index([websiteId, brandId])
+  @@index([websiteId, isFeatured])
+  @@index([websiteId, isBestseller])
+  @@index([websiteId, isNew])
+  @@index([websiteId, priceCents])
+}
+
+model ProductCategory {
+  productId  String
+  categoryId String
+  position   Int    @default(0)
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([productId, categoryId])
+  @@index([categoryId])
+}
+
+model ProductVariant {
+  id                String   @id @default(cuid())
+  websiteId         String
+  productId         String
+  sku               String
+  name              String
+  colorName         String?
+  colorHex          String?
+  size              String?
+  priceCents        Int?
+  comparePriceCents Int?
+  stock             Int      @default(0)
+  /// Units held by unconfirmed COD orders; available = stock - reserved.
+  reserved          Int      @default(0)
+  lowStockThreshold Int      @default(3)
+  barcode           String?
+  position          Int      @default(0)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  website    Website         @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  product    Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  images     ProductImage[]
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+  movements  StockMovement[]
+
+  @@unique([websiteId, sku])
+  @@index([productId, position])
+  @@index([websiteId, stock])
+}
+
+enum ProductImageKind {
+  MAIN
+  GALLERY
+  FRONT
+  PROFILE
+  THREE_QUARTER
+  LIFESTYLE
+  VIDEO
+  TRY_ON_ASSET
+}
+
+model ProductImage {
+  id        String           @id @default(cuid())
+  websiteId String
+  productId String
+  variantId String?
+  mediaId   String
+  kind      ProductImageKind @default(GALLERY)
+  position  Int              @default(0)
+  alt       String?
+
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  media   Media           @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+
+  @@index([productId, position])
+  @@index([variantId])
+  @@index([mediaId])
+}
+
+model StockMovement {
+  id        String   @id @default(cuid())
+  websiteId String
+  variantId String
+  delta     Int
+  reason    String
+  orderId   String?
+  note      String?
+  userId    String?
+  createdAt DateTime @default(now())
+
+  website Website        @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId, createdAt])
+  @@index([variantId])
+}
+
+// ===========================================================================
+// MEDIA
+// ===========================================================================
+
+model Media {
+  id           String   @id @default(cuid())
+  websiteId    String
+  key          String
+  url          String
+  filename     String
+  mimeType     String
+  sizeBytes    Int
+  width        Int?
+  height       Int?
+  alt          String?
+  folder       String   @default("/")
+  thumbnailUrl String?
+  checksum     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  website        Website        @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  productImages  ProductImage[]
+  categoryImages Category[]     @relation("CategoryImage")
+  brandLogos     Brand[]        @relation("BrandLogo")
+  brandCovers    Brand[]        @relation("BrandCover")
+
+  @@unique([websiteId, key])
+  @@index([websiteId, folder])
+  @@index([websiteId, createdAt])
+}
+
+// ===========================================================================
+// CONTENT — pages, blocks, menus
+// ===========================================================================
+
+enum PageKind {
+  HOME
+  STANDARD
+  LEGAL
+  FAQ
+  CONTACT
+  LANDING
+}
+
+model Page {
+  id           String   @id @default(cuid())
+  websiteId    String
+  slug         String
+  title        String
+  kind         PageKind @default(STANDARD)
+  isPublished  Boolean  @default(false)
+  isSystem     Boolean  @default(false)
+  body         String?
+  seo          Json?
+  translations Json?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  website Website        @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  blocks  ContentBlock[]
+
+  @@unique([websiteId, slug])
+  @@index([websiteId, kind])
+}
+
+/// One entry of the homepage / landing-page block list. `type` selects a renderer
+/// from the block registry in @optic/config; `props` is validated against that
+/// block's zod schema before it is written.
+model ContentBlock {
+  id        String   @id @default(cuid())
+  websiteId String
+  pageId    String
+  type      String
+  position  Int      @default(0)
+  isEnabled Boolean  @default(true)
+  props     Json     @default("{}")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  page Page @relation(fields: [pageId], references: [id], onDelete: Cascade)
+
+  @@index([pageId, position])
+  @@index([websiteId])
+}
+
+model Menu {
+  id        String     @id @default(cuid())
+  websiteId String
+  key       String
+  name      String
+  items     MenuItem[]
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, key])
+}
+
+model MenuItem {
+  id       String  @id @default(cuid())
+  menuId   String
+  parentId String?
+  label    String
+  url      String
+  position Int     @default(0)
+  isNew    Boolean @default(false)
+
+  menu     Menu       @relation(fields: [menuId], references: [id], onDelete: Cascade)
+  parent   MenuItem?  @relation("MenuTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children MenuItem[] @relation("MenuTree")
+
+  @@index([menuId, position])
+}
+
+// ===========================================================================
+// CART & ORDERS
+// ===========================================================================
+
+model Cart {
+  id         String   @id @default(cuid())
+  websiteId  String
+  token      String   @unique
+  customerId String?
+  couponCode String?
+  note       String?
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  website  Website    @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  customer Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items    CartItem[]
+
+  @@index([websiteId, customerId])
+  @@index([expiresAt])
+}
+
+model CartItem {
+  id             String   @id @default(cuid())
+  cartId         String
+  productId      String
+  variantId      String?
+  quantity       Int      @default(1)
+  /// Unit price captured at add-to-cart time; re-validated at checkout.
+  unitPriceCents Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  cart    Cart            @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@unique([cartId, productId, variantId])
+  @@index([cartId])
+}
+
+enum OrderStatus {
+  NEW
+  CONFIRMED
+  PREPARING
+  READY
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  RETURNED
+  FAILED_DELIVERY
+}
+
+enum PaymentMethod {
+  CASH_ON_DELIVERY
+  BANK_TRANSFER
+  CARD
+}
+
+enum PaymentStatus {
+  PENDING
+  AUTHORIZED
+  PAID
+  REFUNDED
+  FAILED
+}
+
+enum DeliveryMethod {
+  HOME
+  DESK
+}
+
+model Order {
+  id               String        @id @default(cuid())
+  websiteId        String
+  number           String
+  customerId       String?
+  status           OrderStatus   @default(NEW)
+  paymentMethod    PaymentMethod @default(CASH_ON_DELIVERY)
+  paymentStatus    PaymentStatus @default(PENDING)
+  paymentReference String?
+
+  email     String?
+  phone     String
+  phoneAlt  String?
+  firstName String
+  lastName  String
+
+  wilayaCode     String
+  communeId      String?
+  addressLine    String
+  landmark       String?
+  deliveryMethod DeliveryMethod @default(HOME)
+  carrierKey     String?
+  trackingCode   String?
+
+  currency      String  @default("DZD")
+  subtotalCents Int
+  discountCents Int     @default(0)
+  shippingCents Int     @default(0)
+  totalCents    Int
+  couponCode    String?
+
+  customerNote String?
+  internalNote String?
+  locale       String?
+  source       String  @default("web")
+
+  confirmedAt DateTime?
+  shippedAt   DateTime?
+  deliveredAt DateTime?
+  cancelledAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  website  Website              @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  customer Customer?            @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  wilaya   Wilaya               @relation(fields: [wilayaCode], references: [code], onDelete: Restrict)
+  commune  Commune?             @relation(fields: [communeId], references: [id], onDelete: SetNull)
+  items    OrderItem[]
+  history  OrderStatusHistory[]
+
+  @@unique([websiteId, number])
+  @@index([websiteId, status, createdAt])
+  @@index([websiteId, createdAt])
+  @@index([websiteId, phone])
+  @@index([customerId])
+}
+
+model OrderItem {
+  id             String  @id @default(cuid())
+  orderId        String
+  productId      String?
+  variantId      String?
+  /// Denormalised so an order stays readable after a product is deleted.
+  sku            String
+  name           String
+  variantName    String?
+  imageUrl       String?
+  quantity       Int
+  unitPriceCents Int
+  totalCents     Int
+
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product?        @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variant ProductVariant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+
+  @@index([orderId])
+  @@index([productId])
+}
+
+model OrderStatusHistory {
+  id         String       @id @default(cuid())
+  orderId    String
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  note       String?
+  actorType  String       @default("system")
+  actorId    String?
+  actorName  String?
+  createdAt  DateTime     @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+}
+
+enum CouponType {
+  PERCENTAGE
+  FIXED
+  FREE_SHIPPING
+}
+
+model Coupon {
+  id               String     @id @default(cuid())
+  websiteId        String
+  code             String
+  type             CouponType @default(PERCENTAGE)
+  value            Int
+  minSubtotalCents Int        @default(0)
+  maxDiscountCents Int?
+  usageLimit       Int?
+  usageCount       Int        @default(0)
+  perCustomerLimit Int?
+  startsAt         DateTime?
+  endsAt           DateTime?
+  isActive         Boolean    @default(true)
+  createdAt        DateTime   @default(now())
+  updatedAt        DateTime   @updatedAt
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, code])
+  @@index([websiteId, isActive])
+}
+
+// ===========================================================================
+// LOGISTICS — Algeria (global reference data + per-website zones)
+// ===========================================================================
+
+/// Global reference data: the 58 wilayas of Algeria. Shared by every website so
+/// the platform does not duplicate ~1 500 communes per brand.
+model Wilaya {
+  code      String               @id
+  nameFr    String
+  nameAr    String
+  nameEn    String?
+  communes  Commune[]
+  zones     ShippingZoneWilaya[]
+  orders    Order[]
+  addresses CustomerAddress[]
+
+  @@index([nameFr])
+}
+
+model Commune {
+  id         String  @id @default(cuid())
+  wilayaCode String
+  nameFr     String
+  nameAr     String?
+  postalCode String?
+
+  wilaya    Wilaya            @relation(fields: [wilayaCode], references: [code], onDelete: Cascade)
+  orders    Order[]
+  addresses CustomerAddress[]
+
+  @@unique([wilayaCode, nameFr])
+  @@index([wilayaCode])
+}
+
+model ShippingZone {
+  id                         String   @id @default(cuid())
+  websiteId                  String
+  name                       String
+  isActive                   Boolean  @default(true)
+  homeDeliveryCents          Int?
+  deskDeliveryCents          Int?
+  freeShippingThresholdCents Int?
+  estimatedDaysMin           Int      @default(2)
+  estimatedDaysMax           Int      @default(5)
+  carrierKey                 String?
+  codAllowed                 Boolean  @default(true)
+  position                   Int      @default(0)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  website Website              @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  wilayas ShippingZoneWilaya[]
+
+  @@unique([websiteId, name])
+  @@index([websiteId, isActive])
+}
+
+model ShippingZoneWilaya {
+  zoneId            String
+  wilayaCode        String
+  /// Per-wilaya overrides; null falls back to the zone rate.
+  homeDeliveryCents Int?
+  deskDeliveryCents Int?
+  isAvailable       Boolean @default(true)
+
+  zone   ShippingZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  wilaya Wilaya       @relation(fields: [wilayaCode], references: [code], onDelete: Cascade)
+
+  @@id([zoneId, wilayaCode])
+  @@index([wilayaCode])
+}
+
+// ===========================================================================
+// OPTICAL FEATURES — quiz, visagism, recommendations, favourites
+// ===========================================================================
+
+model Quiz {
+  id          String   @id @default(cuid())
+  websiteId   String
+  key         String
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  disclaimer  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  website   Website        @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  sections  QuizSection[]
+  questions QuizQuestion[]
+  rules     QuizRule[]
+  results   QuizResult[]
+
+  @@unique([websiteId, key])
+}
+
+model QuizSection {
+  id       String  @id @default(cuid())
+  quizId   String
+  key      String
+  title    String
+  subtitle String?
+  position Int     @default(0)
+
+  quiz      Quiz           @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  questions QuizQuestion[]
+
+  @@unique([quizId, key])
+  @@index([quizId, position])
+}
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  BOOLEAN
+  NUMERIC
+  SLIDER
+  ICON_CHOICE
+}
+
+model QuizQuestion {
+  id           String       @id @default(cuid())
+  quizId       String
+  sectionId    String?
+  key          String
+  label        String
+  helpText     String?
+  type         QuestionType @default(SINGLE_CHOICE)
+  position     Int          @default(0)
+  isRequired   Boolean      @default(true)
+  isActive     Boolean      @default(true)
+  /// { min, max, step, unit } for NUMERIC / SLIDER
+  config       Json?
+  /// Conditional display: { all: [{ questionKey, op, value }] }
+  showIf       Json?
+  translations Json?
+
+  quiz    Quiz         @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  section QuizSection? @relation(fields: [sectionId], references: [id], onDelete: SetNull)
+  options QuizOption[]
+
+  @@unique([quizId, key])
+  @@index([quizId, position])
+}
+
+model QuizOption {
+  id           String  @id @default(cuid())
+  questionId   String
+  key          String
+  label        String
+  helpText     String?
+  iconKey      String?
+  imageUrl     String?
+  position     Int     @default(0)
+  /// { anti_reflective: 2, photochromic: 1, ... }
+  weights      Json    @default("{}")
+  translations Json?
+
+  question QuizQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@unique([questionId, key])
+  @@index([questionId, position])
+}
+
+/// Conditional scoring rule evaluated after the raw option weights.
+/// e.g. IF screen_time >= 8 AND night_driving = true THEN anti_reflective += 3
+model QuizRule {
+  id          String  @id @default(cuid())
+  quizId      String
+  key         String
+  description String?
+  /// { all: [...] } | { any: [...] } — see @optic/quiz-engine
+  conditions  Json
+  /// { add: { anti_reflective: 3 }, recommend: ["photochromic"], exclude: [...] }
+  effects     Json
+  position    Int     @default(0)
+  isActive    Boolean @default(true)
+
+  quiz Quiz @relation(fields: [quizId], references: [id], onDelete: Cascade)
+
+  @@unique([quizId, key])
+  @@index([quizId, position])
+}
+
+model QuizResult {
+  id             String   @id @default(cuid())
+  websiteId      String
+  quizId         String
+  customerId     String?
+  sessionKey     String?
+  answers        Json
+  scores         Json
+  recommendation Json
+  createdAt      DateTime @default(now())
+
+  website  Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  quiz     Quiz      @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([websiteId, createdAt])
+  @@index([customerId])
+}
+
+enum VisagismSource {
+  AUTOMATIC
+  MANUAL
+}
+
+/// The abstract profile only. No facial image is ever persisted — see
+/// docs/SECURITY.md §"Facial data".
+model VisagismProfile {
+  id           String         @id @default(cuid())
+  websiteId    String
+  customerId   String?
+  sessionKey   String?
+  source       VisagismSource @default(MANUAL)
+  faceShape    String
+  skinTone     String?
+  undertone    String?
+  hairColor    String?
+  styleProfile String?
+  confidence   Float          @default(0)
+  /// Derived ratios kept for explainability; never raw landmarks or pixels.
+  metrics      Json?
+  createdAt    DateTime       @default(now())
+
+  website  Website   @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  customer Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([websiteId, createdAt])
+  @@index([customerId])
+}
+
+/// Admin-tunable overrides for the visagism engine (boost/penalise a frame shape
+/// for a face shape). The engine ships sane defaults; these refine them per brand.
+model RecommendationRule {
+  id         String  @id @default(cuid())
+  websiteId  String
+  faceShape  String
+  frameShape String
+  weight     Int     @default(0)
+  reason     String?
+  isActive   Boolean @default(true)
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, faceShape, frameShape])
+  @@index([websiteId])
+}
+
+model Favorite {
+  id         String   @id @default(cuid())
+  websiteId  String
+  customerId String
+  productId  String
+  createdAt  DateTime @default(now())
+
+  website  Website  @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  customer Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([customerId, productId])
+  @@index([websiteId])
+}
+
+// ===========================================================================
+// OPERATIONS — audit, marketing, exports
+// ===========================================================================
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  websiteId   String?
+  userId      String?
+  actorEmail  String?
+  action      String
+  entityType  String
+  entityId    String?
+  entityLabel String?
+  before      Json?
+  after       Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  website Website? @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([websiteId, createdAt])
+  @@index([entityType, entityId])
+  @@index([userId])
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  websiteId String
+  email     String
+  locale    String?
+  source    String?
+  createdAt DateTime @default(now())
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@unique([websiteId, email])
+  @@index([websiteId])
+}
+
+model ContactMessage {
+  id        String   @id @default(cuid())
+  websiteId String
+  name      String
+  email     String?
+  phone     String?
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId, isRead, createdAt])
+}
+
+enum ExportStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model ExportJob {
+  id         String       @id @default(cuid())
+  websiteId  String
+  status     ExportStatus @default(PENDING)
+  format     String       @default("zip")
+  outputPath String?
+  sizeBytes  Int?
+  error      String?
+  manifest   Json?
+  startedAt  DateTime?
+  finishedAt DateTime?
+  createdAt  DateTime     @default(now())
+
+  website Website @relation(fields: [websiteId], references: [id], onDelete: Cascade)
+
+  @@index([websiteId, createdAt])
+}

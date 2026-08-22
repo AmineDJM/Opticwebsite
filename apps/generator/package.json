@@ -1,0 +1,53 @@
+{
+  "name": "@optic/generator",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Application C — super-admin website generator and source-code exporter.",
+  "scripts": {
+    "dev": "next dev --port 3002",
+    "build": "next build",
+    "start": "next start --port 3002",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "clean": "rm -rf .next .turbo node_modules *.tsbuildinfo"
+  },
+  "dependencies": {
+    "next": "^15.5.23",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "server-only": "^0.0.1",
+    "zod": "^3.25.76",
+    "@optic/analytics": "workspace:*",
+    "@optic/auth": "workspace:*",
+    "@optic/catalog": "workspace:*",
+    "@optic/commerce": "workspace:*",
+    "@optic/config": "workspace:*",
+    "@optic/core": "workspace:*",
+    "@optic/database": "workspace:*",
+    "@optic/i18n": "workspace:*",
+    "@optic/quiz-engine": "workspace:*",
+    "@optic/recommendation": "workspace:*",
+    "@optic/storage": "workspace:*",
+    "@optic/theming": "workspace:*",
+    "@optic/ui": "workspace:*",
+    "@optic/virtual-try-on": "workspace:*",
+    "@optic/visagism": "workspace:*",
+    "sharp": "^0.35.3",
+    "@optic/exporter": "workspace:*"
+  },
+  "devDependencies": {
+    "@optic/eslint-config": "workspace:*",
+    "@optic/typescript-config": "workspace:*",
+    "@tailwindcss/forms": "^0.5.11",
+    "@types/node": "^22.10.5",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "autoprefixer": "^10.5.4",
+    "eslint": "^9.18.0",
+    "postcss": "^8.5.26",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  }
+}

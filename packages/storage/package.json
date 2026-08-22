@@ -1,0 +1,36 @@
+{
+  "name": "@optic/storage",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*.ts"
+  },
+  "scripts": {
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "clean": "rm -rf .turbo node_modules dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1116.0",
+    "@optic/core": "workspace:*",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@optic/eslint-config": "workspace:*",
+    "@optic/typescript-config": "workspace:*",
+    "@types/node": "^22.10.5",
+    "eslint": "^9.18.0",
+    "typescript": "^5.7.3",
+    "vitest": "^3.2.4"
+  },
+  "peerDependenciesMeta": {
+    "@aws-sdk/client-s3": {
+      "optional": true
+    }
+  }
+}
