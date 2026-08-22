@@ -4,4 +4,5 @@ export { tenantClient, TENANT_MODELS } from "./tenant.js";
 export type { TenantClient } from "./tenant.js";
 export * from "./context.js";
 export * from "./repositories/index.js";
+export { loadSiteFromConfig } from "./seed-loader.js";
 export * from "./generated/client/index.js";
