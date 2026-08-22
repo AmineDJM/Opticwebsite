@@ -5,7 +5,7 @@ test.describe("Storefront — catalogue", () => {
   test("homepage renders the brand and Momus highlight", async ({ page }) => {
     await page.goto("/");
     await expect(page).toHaveTitle(/Aura Optique/);
-    await expect(page.getByText("Momus").first()).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Momus/ })).toBeVisible();
   });
 
   test("browse catalogue and filter", async ({ page }) => {
