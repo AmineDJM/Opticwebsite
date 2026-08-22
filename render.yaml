@@ -79,3 +79,89 @@ services:
       # (it is inlined at build time). Leaving it blank does not break the site.
       - key: NEXT_PUBLIC_STOREFRONT_URL
         sync: false
+
+  # --------------------------------------------------------------------------
+  # Application B — the per-brand back-office. Same database, same brand pin.
+  # It re-runs the (idempotent) seed at boot so the demo images exist on its own
+  # disk too — with STORAGE_DRIVER=local each service has its own storage. To
+  # share *uploaded* media with the storefront, switch both services to S3/R2:
+  # see docs/RENDER.md ("Ajouter l'administration").
+  # --------------------------------------------------------------------------
+  - type: web
+    name: optic-admin
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: claude/ecommerce-optical-generator-1nhhq9
+    autoDeploy: true
+    healthCheckPath: /login
+    buildCommand: npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/admin build
+    startCommand: pnpm db:migrate:deploy && (pnpm db:seed || echo "⚠️ SEED FAILED — starting anyway; demo data may be incomplete, see the error above.") && pnpm --filter @optic/admin exec next start -H 0.0.0.0 -p $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: COREPACK_INTEGRITY_KEYS
+        value: "0"
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: SITE_SLUG
+        value: aura-optique
+      - key: STORAGE_DRIVER
+        value: local
+      - key: STORAGE_LOCAL_DIR
+        value: /tmp/optic-media
+      - key: STORAGE_PUBLIC_URL
+        value: /media
+      - key: DATABASE_URL
+        fromDatabase:
+          name: optic-db
+          property: connectionString
+      # The storefront's public URL ("Voir la boutique" button). Fill after the
+      # first deploy, then redeploy this service (inlined at build time).
+      - key: NEXT_PUBLIC_STOREFRONT_URL
+        sync: false
+
+  # --------------------------------------------------------------------------
+  # Application C — the platform generator (create new brands, export source).
+  # Cross-tenant by design: no SITE_SLUG. Sign in with the platform admin
+  # account. Exports are written to an ephemeral dir and downloaded immediately.
+  # --------------------------------------------------------------------------
+  - type: web
+    name: optic-generator
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: claude/ecommerce-optical-generator-1nhhq9
+    autoDeploy: true
+    healthCheckPath: /login
+    buildCommand: npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/generator build
+    startCommand: pnpm db:migrate:deploy && (pnpm db:seed || echo "⚠️ SEED FAILED — starting anyway; demo data may be incomplete, see the error above.") && pnpm --filter @optic/generator exec next start -H 0.0.0.0 -p $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: COREPACK_INTEGRITY_KEYS
+        value: "0"
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: STORAGE_DRIVER
+        value: local
+      - key: STORAGE_LOCAL_DIR
+        value: /tmp/optic-media
+      - key: STORAGE_PUBLIC_URL
+        value: /media
+      - key: EXPORT_OUTPUT_DIR
+        value: /tmp/optic-exports
+      - key: DATABASE_URL
+        fromDatabase:
+          name: optic-db
+          property: connectionString
+      # Links shown in the generator UI. Fill after the first deploys, then
+      # redeploy this service (inlined at build time).
+      - key: NEXT_PUBLIC_STOREFRONT_URL
+        sync: false
+      - key: NEXT_PUBLIC_ADMIN_URL
+        sync: false
