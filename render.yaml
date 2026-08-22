@@ -49,6 +49,11 @@ services:
       # corepack with valid keys.
       - key: NODE_VERSION
         value: "22"
+      # Hard lock against that same corepack bug: skip its registry-signature
+      # check entirely, so provisioning pnpm can never fail on stale keys —
+      # whatever corepack version the runtime bundles.
+      - key: COREPACK_INTEGRITY_KEYS
+        value: "0"
       - key: NODE_ENV
         value: production
       - key: NEXT_TELEMETRY_DISABLED

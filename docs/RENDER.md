@@ -171,10 +171,15 @@ compte de démonstration créé par le seed :
 
 ## Dépannage
 
-- **Build : `corepack … Cannot find matching keyid`** → bug connu de corepack
-  (clés de signature npm périmées dans le runtime Node). C'est pourquoi la
-  `buildCommand` installe pnpm via `npm install -g pnpm@10.33.0` au lieu de
-  `corepack enable`. Gardez cette forme de commande.
+- **Build : `corepack … Cannot find matching keyid`** → Render lance corepack
+  AVANT la commande de build (déclenché par le champ `packageManager` de
+  `package.json`), et le corepack des vieux runtimes Node embarque des clés de
+  signature npm périmées. Deux verrous dans `render.yaml` : `NODE_VERSION=22`
+  et `COREPACK_INTEGRITY_KEYS=0` (désactive la vérification fautive, quelle que
+  soit la version de corepack). Si l'erreur apparaît sur un service créé avant
+  ces correctifs : ajoutez ces deux variables dans **Settings → Environment**,
+  puis **Manual Deploy → Clear build cache & deploy** (vider le cache est
+  indispensable).
 - **Le build échoue sur le lockfile** → vérifiez que `pnpm-lock.yaml` est bien
   commité et à jour (`pnpm install` en local, puis commit).
 - **`No website resolved` au démarrage** → `SITE_SLUG` doit valoir `aura-optique`
