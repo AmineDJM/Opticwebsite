@@ -14,20 +14,21 @@ let idA = "";
 let idB = "";
 
 beforeAll(async () => {
+  // Skip when there is no reachable database OR no schema yet (e.g. `test:unit`
+  // run before migrations): both raise here and mark the suite unavailable.
   try {
     await prisma.$queryRaw`SELECT 1`;
+    // Clean any prior run.
+    await prisma.website.deleteMany({ where: { slug: { in: [A, B] } } });
+    const a = await prisma.website.create({ data: { slug: A, name: "A", updatedAt: new Date() } });
+    const b = await prisma.website.create({ data: { slug: B, name: "B", updatedAt: new Date() } });
+    idA = a.id;
+    idB = b.id;
+    await prisma.product.create({ data: { websiteId: idA, sku: "A-1", slug: "a-1", name: "Product A", priceCents: 1000, updatedAt: new Date() } });
+    await prisma.product.create({ data: { websiteId: idB, sku: "B-1", slug: "b-1", name: "Product B", priceCents: 2000, updatedAt: new Date() } });
   } catch {
     dbAvailable = false;
-    return;
   }
-  // Clean any prior run.
-  await prisma.website.deleteMany({ where: { slug: { in: [A, B] } } });
-  const a = await prisma.website.create({ data: { slug: A, name: "A", updatedAt: new Date() } });
-  const b = await prisma.website.create({ data: { slug: B, name: "B", updatedAt: new Date() } });
-  idA = a.id;
-  idB = b.id;
-  await prisma.product.create({ data: { websiteId: idA, sku: "A-1", slug: "a-1", name: "Product A", priceCents: 1000, updatedAt: new Date() } });
-  await prisma.product.create({ data: { websiteId: idB, sku: "B-1", slug: "b-1", name: "Product B", priceCents: 2000, updatedAt: new Date() } });
 });
 
 afterAll(async () => {
