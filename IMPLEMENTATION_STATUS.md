@@ -33,7 +33,25 @@ Feature · Status · Files · Tests · Remaining work
 | Architecture docs | IMPLEMENTED | `docs/ARCHITECTURE.md` | — | — |
 
 ## Phase 2 — Design system & UI · NOT STARTED
-## Phase 3 — Commerce domain · NOT STARTED
+## Phase 3 — Commerce & optical domain (pure, tested)
+
+| Feature | Status | Files | Tests | Remaining |
+| --- | --- | --- | --- | --- |
+| Pricing & cart totals | IMPLEMENTED | `packages/commerce/src/pricing.ts` | 11 tests | — |
+| Coupons (%/fixed/free-ship, caps, min) | IMPLEMENTED | `packages/commerce/src/pricing.ts` | covered | — |
+| Order state machine + revenue tiers | IMPLEMENTED | `packages/commerce/src/order-state.ts` | 8 tests | — |
+| Payment providers (COD only, extensible) | IMPLEMENTED | `packages/commerce/src/payment.ts` | covered | CIB/Edahabia later (by design) |
+| Shipping (wilaya/commune + overrides) | IMPLEMENTED | `packages/commerce/src/shipping.ts` | covered | carrier adapters (interface only) |
+| Catalogue filters + URL sync | IMPLEMENTED | `packages/catalog/src/filters.ts` | 8 tests | — |
+| Prisma query builder for catalogue | IMPLEMENTED | `packages/catalog/src/query.ts` | covered | — |
+| Recommendation engine (pure) | IMPLEMENTED | `packages/recommendation/src/*` | 7 tests | admin rule tuning UI (Phase 5) |
+| Visagism geometry + colorimetry | IMPLEMENTED | `packages/visagism/src/*` | 17 tests | MediaPipe browser adapter (Phase 4) |
+| Visagism manual questionnaire | IMPLEMENTED | `packages/visagism/src/manual.ts` | covered | UI (Phase 4) |
+| Frame quality control | IMPLEMENTED | `packages/visagism/src/quality.ts` | covered | — |
+| Quiz engine (20Q, rules, scoring) | IMPLEMENTED | `packages/quiz-engine/src/*` | 14 tests | builder UI (Phase 5) |
+| Lens recommendation builder | IMPLEMENTED | `packages/quiz-engine/src/recommendation.ts` | covered | — |
+| Virtual try-on abstraction + 2D overlay | IMPLEMENTED | `packages/virtual-try-on/src/index.ts` | 8 tests | camera UI (Phase 4); 3D SDK later (by design) |
+| Analytics bus + sinks (consent-gated) | IMPLEMENTED | `packages/analytics/src/index.ts` | 6 tests | GA4/Meta wiring in app (Phase 4) |
 ## Phase 4 — Storefront · NOT STARTED
 ## Phase 5 — Admin · NOT STARTED
 ## Phase 6 — Generator + Exporter · NOT STARTED
