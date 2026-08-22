@@ -21,7 +21,7 @@ packages/database/generated/
 !.env.example
 
 # runtime data
-/var/
+var/
 /storage-data/
 /exports/
 uploads/

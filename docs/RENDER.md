@@ -135,10 +135,12 @@ s'en charge — il applique seulement les migrations puis démarre) :
     autoDeploy: true
     healthCheckPath: /login
     buildCommand: npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/admin build
-    startCommand: pnpm db:migrate:deploy && pnpm --filter @optic/admin exec next start -p $PORT
+    startCommand: pnpm db:migrate:deploy && pnpm --filter @optic/admin exec next start -H 0.0.0.0 -p $PORT
     envVars:
       - key: NODE_VERSION
-        value: "20.18.0"
+        value: "22"
+      - key: COREPACK_INTEGRITY_KEYS
+        value: "0"
       - key: NODE_ENV
         value: production
       - key: NEXT_TELEMETRY_DISABLED
@@ -171,6 +173,14 @@ compte de démonstration créé par le seed :
 
 ## Dépannage
 
+- **Seed : `new row violates row-level security policy` (42501)** → la base a été
+  migrée avant le correctif RLS. La migration
+  `20260822230000_rls_trusted_owner_no_force` retire le `FORCE` appliqué par erreur
+  (le rôle propriétaire — le backend de confiance — redevient exempté ; la RLS
+  continue de protéger intégralement tout rôle applicatif restreint). Comme
+  `db:migrate:deploy` tourne au démarrage, **Manual Deploy → Deploy latest commit**
+  suffit. Le seed est par ailleurs non bloquant : s'il échoue, le serveur démarre
+  quand même et l'erreur reste visible dans les logs.
 - **Build : `corepack … Cannot find matching keyid`** → Render lance corepack
   AVANT la commande de build (déclenché par le champ `packageManager` de
   `package.json`), et le corepack des vieux runtimes Node embarque des clés de

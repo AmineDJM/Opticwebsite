@@ -39,9 +39,10 @@ services:
     # Node runtime), install deps (frozen lockfile), generate the Prisma client,
     # build the app. Internal @optic/* packages ship TS source, so only the app builds.
     buildCommand: npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/storefront build
-    # Boot: apply migrations, run the idempotent seed (creates the brand + demo
-    # data and regenerates the demo images into STORAGE_LOCAL_DIR), then serve.
-    startCommand: pnpm db:migrate:deploy && pnpm db:seed && pnpm --filter @optic/storefront exec next start -p $PORT
+    # Boot: apply migrations (fatal on failure — never serve a schema-drifted app),
+    # then run the idempotent seed. The seed is optional demo data: if it fails the
+    # server still starts, loudly, so a seed hiccup can never keep the port closed.
+    startCommand: pnpm db:migrate:deploy && (pnpm db:seed || echo "⚠️ SEED FAILED — starting anyway; demo data may be incomplete, see the error above.") && pnpm --filter @optic/storefront exec next start -H 0.0.0.0 -p $PORT
     envVars:
       # Node 22 (latest): Render's runtime auto-runs corepack because of the
       # `packageManager` field, and older Node bundles a corepack with stale npm
