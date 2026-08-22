@@ -34,9 +34,38 @@ const SLUG = "aura-optique";
 const DEMO_ADMIN_EMAIL = "admin@aura-optique.demo";
 const DEMO_ADMIN_PASSWORD = "AuraOptique2026!";
 
+/**
+ * Fail fast with an actionable message when the connected role cannot write through
+ * RLS. That is the case when FORCE ROW LEVEL SECURITY is still active (a database that
+ * predates migration 20260822230000_rls_trusted_owner_no_force) and the role is neither
+ * superuser nor BYPASSRLS: every tenant-table write would die with a cryptic 42501.
+ */
+async function assertRlsPrivileges(): Promise<void> {
+  const rows = await prisma.$queryRaw<
+    { forced: boolean | null; is_super: boolean; bypass: boolean | null; role: string }[]
+  >`SELECT
+      (SELECT c.relforcerowsecurity FROM pg_class c
+         JOIN pg_namespace n ON n.oid = c.relnamespace
+        WHERE n.nspname = current_schema() AND c.relname = 'Media') AS forced,
+      current_setting('is_superuser') = 'on' AS is_super,
+      (SELECT rolbypassrls FROM pg_roles WHERE rolname = current_user) AS bypass,
+      current_user AS role`;
+  const s = rows[0];
+  if (s?.forced && !s.is_super && !s.bypass) {
+    throw new Error(
+      `Cannot seed: FORCE ROW LEVEL SECURITY is active on the tenant tables and the connected ` +
+        `role "${s.role}" is neither superuser nor BYPASSRLS, so every tenant-table write would be ` +
+        `rejected (42501). Run \`pnpm db:migrate:deploy\` first: migration ` +
+        `20260822230000_rls_trusted_owner_no_force removes FORCE so the owner role (the trusted ` +
+        `backend) can seed, while RLS keeps protecting restricted application roles.`,
+    );
+  }
+}
+
 async function main() {
   console.info("🌱 Seeding Aura Optique…");
 
+  await assertRlsPrivileges();
   await seedWilayas();
   const website = await seedWebsite();
   await seedRolesAndAdmin(website.id);
@@ -442,6 +471,14 @@ main()
   .then(async () => { await prisma.$disconnect(); })
   .catch(async (e) => {
     console.error("Seed failed:", e);
+    const msg = e instanceof Error ? e.message : String(e);
+    if (msg.includes("row-level security") || msg.includes("42501")) {
+      console.error(
+        "\nHint: PostgreSQL rejected writes through row-level security. The seed must run as " +
+          "the table-owner role (the DATABASE_URL role that applied the migrations) or a " +
+          "BYPASSRLS role, with migrations up to date (`pnpm db:migrate:deploy`).",
+      );
+    }
     await prisma.$disconnect();
     process.exit(1);
   });

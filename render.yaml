@@ -1,22 +1,21 @@
 # ---------------------------------------------------------------------------
 # Render Blueprint — https://render.com/docs/blueprint-spec
 #
-# Deploys the Aura Optique STOREFRONT (Application A) + a managed PostgreSQL
-# database, in one click from the Render dashboard ("New +" → "Blueprint").
+# Deploys the FULL Aura Optique platform — storefront (A), admin back-office (B)
+# and website generator (C) — plus a managed PostgreSQL database, in one click
+# from the Render dashboard ("New +" → "Blueprint").
 #
-# The storefront is a single-tenant deployment pinned to SITE_SLUG=aura-optique.
-# It builds the Next.js app, runs the database migrations + the (idempotent)
-# seed on boot, then serves on Render's $PORT.
+# Storefront and admin are single-tenant deployments pinned to
+# SITE_SLUG=aura-optique; the generator is cross-tenant (platform super-admin).
+# Each service builds its Next.js app, applies the database migrations at boot,
+# runs the (idempotent, non-fatal) seed, then serves on Render's $PORT.
 #
 # Demo images are generated on boot into a local directory (STORAGE_LOCAL_DIR)
-# and served by the app's own /media route — so this Blueprint needs NO external
-# object storage to work. To ALSO deploy the admin back-office (Application B)
-# and share uploaded media between the two services, switch to shared S3/R2
-# storage: see docs/RENDER.md.
+# and served by each app's own /media route — so this Blueprint needs NO
+# external object storage to work. To make admin UPLOADS durable and shared
+# across services, switch all services to S3/R2 storage: see docs/RENDER.md.
 #
-# NOTE ON BRANCH: this Blueprint is set to deploy the feature branch that holds
-# the code. Once it is merged into your default branch, drop the `branch:` lines
-# (or point them at your default branch).
+# Services follow the Blueprint's tracked branch (no per-service branch pins).
 # ---------------------------------------------------------------------------
 
 databases:
@@ -32,19 +31,28 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    branch: claude/ecommerce-optical-generator-1nhhq9
     autoDeploy: true
     healthCheckPath: /
     # Build: install pnpm (via npm — avoids the corepack signing-key bug in the
     # Node runtime), install deps (frozen lockfile), generate the Prisma client,
     # build the app. Internal @optic/* packages ship TS source, so only the app builds.
     buildCommand: npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/storefront build
-    # Boot: apply migrations, run the idempotent seed (creates the brand + demo
-    # data and regenerates the demo images into STORAGE_LOCAL_DIR), then serve.
-    startCommand: pnpm db:migrate:deploy && pnpm db:seed && pnpm --filter @optic/storefront exec next start -p $PORT
+    # Boot: apply migrations (fatal on failure — never serve a schema-drifted app),
+    # then run the idempotent seed. The seed is optional demo data: if it fails the
+    # server still starts, loudly, so a seed hiccup can never keep the port closed.
+    startCommand: pnpm db:migrate:deploy && (pnpm db:seed || echo "⚠️ SEED FAILED — starting anyway; demo data may be incomplete, see the error above.") && pnpm --filter @optic/storefront exec next start -H 0.0.0.0 -p $PORT
     envVars:
+      # Node 22 (latest): Render's runtime auto-runs corepack because of the
+      # `packageManager` field, and older Node bundles a corepack with stale npm
+      # signing keys ("Cannot find matching keyid"). A current Node ships a
+      # corepack with valid keys.
       - key: NODE_VERSION
-        value: "20.18.0"
+        value: "22"
+      # Hard lock against that same corepack bug: skip its registry-signature
+      # check entirely, so provisioning pnpm can never fail on stale keys —
+      # whatever corepack version the runtime bundles.
+      - key: COREPACK_INTEGRITY_KEYS
+        value: "0"
       - key: NODE_ENV
         value: production
       - key: NEXT_TELEMETRY_DISABLED
@@ -68,4 +76,88 @@ services:
       # Open Graph). Fill it in after the first deploy, then trigger a rebuild
       # (it is inlined at build time). Leaving it blank does not break the site.
       - key: NEXT_PUBLIC_STOREFRONT_URL
+        sync: false
+
+  # --------------------------------------------------------------------------
+  # Application B — the per-brand back-office. Same database, same brand pin.
+  # It re-runs the (idempotent) seed at boot so the demo images exist on its own
+  # disk too — with STORAGE_DRIVER=local each service has its own storage. To
+  # share *uploaded* media with the storefront, switch both services to S3/R2:
+  # see docs/RENDER.md ("Ajouter l'administration").
+  # --------------------------------------------------------------------------
+  - type: web
+    name: optic-admin
+    runtime: node
+    plan: free
+    region: frankfurt
+    autoDeploy: true
+    healthCheckPath: /login
+    buildCommand: npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/admin build
+    startCommand: pnpm db:migrate:deploy && (pnpm db:seed || echo "⚠️ SEED FAILED — starting anyway; demo data may be incomplete, see the error above.") && pnpm --filter @optic/admin exec next start -H 0.0.0.0 -p $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: COREPACK_INTEGRITY_KEYS
+        value: "0"
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: SITE_SLUG
+        value: aura-optique
+      - key: STORAGE_DRIVER
+        value: local
+      - key: STORAGE_LOCAL_DIR
+        value: /tmp/optic-media
+      - key: STORAGE_PUBLIC_URL
+        value: /media
+      - key: DATABASE_URL
+        fromDatabase:
+          name: optic-db
+          property: connectionString
+      # The storefront's public URL ("Voir la boutique" button). Fill after the
+      # first deploy, then redeploy this service (inlined at build time).
+      - key: NEXT_PUBLIC_STOREFRONT_URL
+        sync: false
+
+  # --------------------------------------------------------------------------
+  # Application C — the platform generator (create new brands, export source).
+  # Cross-tenant by design: no SITE_SLUG. Sign in with the platform admin
+  # account. Exports are written to an ephemeral dir and downloaded immediately.
+  # --------------------------------------------------------------------------
+  - type: web
+    name: optic-generator
+    runtime: node
+    plan: free
+    region: frankfurt
+    autoDeploy: true
+    healthCheckPath: /login
+    buildCommand: npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/generator build
+    startCommand: pnpm db:migrate:deploy && (pnpm db:seed || echo "⚠️ SEED FAILED — starting anyway; demo data may be incomplete, see the error above.") && pnpm --filter @optic/generator exec next start -H 0.0.0.0 -p $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: COREPACK_INTEGRITY_KEYS
+        value: "0"
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      - key: STORAGE_DRIVER
+        value: local
+      - key: STORAGE_LOCAL_DIR
+        value: /tmp/optic-media
+      - key: STORAGE_PUBLIC_URL
+        value: /media
+      - key: EXPORT_OUTPUT_DIR
+        value: /tmp/optic-exports
+      - key: DATABASE_URL
+        fromDatabase:
+          name: optic-db
+          property: connectionString
+      # Links shown in the generator UI. Fill after the first deploys, then
+      # redeploy this service (inlined at build time).
+      - key: NEXT_PUBLIC_STOREFRONT_URL
+        sync: false
+      - key: NEXT_PUBLIC_ADMIN_URL
         sync: false

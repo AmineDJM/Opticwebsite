@@ -40,15 +40,24 @@ Three independent layers, so a failure in one does not leak data across brands:
    and the `data` of every write for tenant models, and **rejects** any query that tries
    to target a different `websiteId`. Application code never writes the filter, so it
    cannot forget it. This is the layer that is active by default.
-3. **PostgreSQL Row-Level Security (RLS).** The migration
-   `20260822190000_row_level_security` enables `FORCE ROW LEVEL SECURITY` on every tenant
-   table with a policy keyed on `current_setting('app.website_id')`. This is the layer
-   that survives an application bug — even a raw SQL query cannot cross tenants.
+3. **PostgreSQL Row-Level Security (RLS).** Migration
+   `20260822190000_row_level_security` enables RLS on every tenant table with a strict
+   policy keyed on `current_setting('app.website_id')`; migration
+   `20260822230000_rls_trusted_owner_no_force` removes the `FORCE` flag that the first
+   migration applied by mistake. The resulting model is two-tier, standard Postgres
+   semantics:
+   - the **table-owner role** (the `DATABASE_URL` role that runs migrations — the
+     trusted backend: migrations, seed, and the app server in the default single-role
+     deployment) bypasses the policies, so system operations work on managed hosts
+     where that role is not a superuser (e.g. Render);
+   - **any other role** is fully subject to the policies — no permissive
+     `USING (true)` exists anywhere. This is the layer that survives an application
+     bug: even a raw SQL query under a restricted role cannot cross tenants.
 
-### Enabling RLS in production
+### Enabling RLS enforcement at runtime
 
-RLS is **applied but only takes effect under a non-superuser role** (owners/superusers
-bypass RLS). To activate it:
+The policies only take effect for roles that are **neither the table owner nor
+superuser**. To have the application itself run under enforcement:
 
 1. Run the app's runtime queries under a **restricted role**:
    ```sql

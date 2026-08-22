@@ -111,7 +111,7 @@ Feature · Status · Files · Tests · Remaining work
 | Item | Status | Notes |
 | --- | --- | --- |
 | Tenant isolation — 3 layers | IMPLEMENTED | composite unique + client extension + RLS migration; integration test (layer 2) + restricted-role test (layer 3) both pass |
-| RLS migration | IMPLEMENTED | `20260822190000_row_level_security`; enablement in docs/SECURITY.md |
+| RLS migration | IMPLEMENTED | `20260822190000_row_level_security` + `20260822230000_rls_trusted_owner_no_force` (owner = trusted backend, restricted roles enforced); docs/SECURITY.md |
 | E2E (Playwright) | IMPLEMENTED | 7 specs: catalogue, COD checkout, quiz, manual visagism, admin login; desktop + mobile |
 | SEO — sitemap.xml + robots.txt | IMPLEMENTED | dynamic, honors indexable flag |
 | Accessibility (WCAG 2.2) | IMPLEMENTED | focus-visible everywhere, labelled controls, keyboard-accessible modals, alt text, reduced-motion, skip-link, 44px targets; jsx-a11y lint clean |
