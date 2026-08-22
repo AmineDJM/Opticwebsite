@@ -30,7 +30,8 @@
     "zod": "^3.25.76",
     "@optic/catalog": "workspace:*",
     "@optic/config": "workspace:*",
-    "@optic/commerce": "workspace:*"
+    "@optic/commerce": "workspace:*",
+    "@optic/storage": "workspace:*"
   },
   "devDependencies": {
     "@optic/eslint-config": "workspace:*",

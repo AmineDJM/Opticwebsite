@@ -44,7 +44,14 @@ pnpm dev                        # storefront :3000, admin :3001, generator :3002
 ```
 
 Demo credentials and demo data are printed by the seed and documented in
-[DEPLOYMENT.md](docs/DEPLOYMENT.md).
+[docs/RENDER.md](docs/RENDER.md).
+
+## Deploy online (Render)
+
+One click puts the storefront + a managed PostgreSQL database online, with no
+external services to configure — Render reads [`render.yaml`](render.yaml) and
+provisions everything. Step-by-step guide (and how to add the admin back-office):
+**[docs/RENDER.md](docs/RENDER.md)**.
 
 ## Common tasks
 
@@ -65,7 +72,7 @@ packages/     core · config · theming · i18n · database · auth · commerce 
               catalog · recommendation · visagism · quiz-engine ·
               virtual-try-on · analytics · storage · ui · exporter
 tooling/      eslint-config · typescript-config · tailwind-config
-docs/         ARCHITECTURE · DATABASE · SECURITY · DEPLOYMENT · DECISIONS
+docs/         ARCHITECTURE · DATABASE · SECURITY · RENDER · DECISIONS
 e2e/          Playwright specs
 ```
 

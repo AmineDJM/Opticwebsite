@@ -1,0 +1,70 @@
+# ---------------------------------------------------------------------------
+# Render Blueprint — https://render.com/docs/blueprint-spec
+#
+# Deploys the Aura Optique STOREFRONT (Application A) + a managed PostgreSQL
+# database, in one click from the Render dashboard ("New +" → "Blueprint").
+#
+# The storefront is a single-tenant deployment pinned to SITE_SLUG=aura-optique.
+# It builds the Next.js app, runs the database migrations + the (idempotent)
+# seed on boot, then serves on Render's $PORT.
+#
+# Demo images are generated on boot into a local directory (STORAGE_LOCAL_DIR)
+# and served by the app's own /media route — so this Blueprint needs NO external
+# object storage to work. To ALSO deploy the admin back-office (Application B)
+# and share uploaded media between the two services, switch to shared S3/R2
+# storage: see docs/RENDER.md.
+#
+# NOTE ON BRANCH: this Blueprint is set to deploy the feature branch that holds
+# the code. Once it is merged into your default branch, drop the `branch:` lines
+# (or point them at your default branch).
+# ---------------------------------------------------------------------------
+
+databases:
+  - name: optic-db
+    databaseName: optic
+    user: optic
+    plan: free
+    region: frankfurt
+
+services:
+  - type: web
+    name: optic-storefront
+    runtime: node
+    plan: free
+    region: frankfurt
+    branch: claude/ecommerce-optical-generator-1nhhq9
+    autoDeploy: true
+    healthCheckPath: /
+    # Build: install (frozen lockfile), generate the Prisma client, build the app.
+    # Internal @optic/* packages ship TypeScript source, so only the app is built.
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/storefront build
+    # Boot: apply migrations, run the idempotent seed (creates the brand + demo
+    # data and regenerates the demo images into STORAGE_LOCAL_DIR), then serve.
+    startCommand: pnpm db:migrate:deploy && pnpm db:seed && pnpm --filter @optic/storefront exec next start -p $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: "20.18.0"
+      - key: NODE_ENV
+        value: production
+      - key: NEXT_TELEMETRY_DISABLED
+        value: "1"
+      # Pins this deployment to the Aura Optique brand (single-tenant).
+      - key: SITE_SLUG
+        value: aura-optique
+      # Local storage: demo images are written here on boot and served at /media.
+      - key: STORAGE_DRIVER
+        value: local
+      - key: STORAGE_LOCAL_DIR
+        value: /tmp/optic-media
+      - key: STORAGE_PUBLIC_URL
+        value: /media
+      # Wired automatically to the managed database above.
+      - key: DATABASE_URL
+        fromDatabase:
+          name: optic-db
+          property: connectionString
+      # Optional: your public URL, used for SEO absolute links (sitemap, canonical,
+      # Open Graph). Fill it in after the first deploy, then trigger a rebuild
+      # (it is inlined at build time). Leaving it blank does not break the site.
+      - key: NEXT_PUBLIC_STOREFRONT_URL
+        sync: false
