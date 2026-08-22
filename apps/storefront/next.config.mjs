@@ -20,7 +20,9 @@ const nextConfig = {
     "@optic/storage",
   ],
   // Self-contained server for independent hosting / export (§1).
-  output: "standalone",
+  // Standalone output is opt-in (Docker sets OPTIC_STANDALONE=1). By default we use
+  // the normal server so `next start` works for dev, E2E and simple deployments.
+  output: process.env.OPTIC_STANDALONE ? "standalone" : undefined,
   outputFileTracingRoot: new URL("../../", import.meta.url).pathname,
   images: {
     // Local media is served by our own route; SVG placeholders and remote CDNs both work.
