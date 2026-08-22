@@ -63,7 +63,31 @@ Feature · Status · Files · Tests · Remaining work
 | Lens recommendation builder | IMPLEMENTED | `packages/quiz-engine/src/recommendation.ts` | covered | — |
 | Virtual try-on abstraction + 2D overlay | IMPLEMENTED | `packages/virtual-try-on/src/index.ts` | 8 tests | camera UI (Phase 4); 3D SDK later (by design) |
 | Analytics bus + sinks (consent-gated) | IMPLEMENTED | `packages/analytics/src/index.ts` | 6 tests | GA4/Meta wiring in app (Phase 4) |
-## Phase 4 — Storefront · NOT STARTED
+## Phase 4 — Storefront (Application A)
+
+| Feature | Status | Files | Tests | Remaining |
+| --- | --- | --- | --- | --- |
+| Runtime-themed layout, header, footer, announcement | IMPLEMENTED | `apps/storefront/src/app/layout.tsx`, `components/site-*.tsx` | build + smoke | — |
+| Homepage (data-driven blocks) | IMPLEMENTED | `app/page.tsx`, `components/block-renderer.tsx` | build + content check | — |
+| Catalogue + filters + sort + pagination (URL-synced) | IMPLEMENTED | `app/boutique`, `app/categorie/[slug]`, `components/catalog-*` | build | — |
+| Search autocomplete | IMPLEMENTED | `app/api/search`, `components/search-box.tsx` | live check | — |
+| Product detail (gallery/variants/specs/related) | IMPLEMENTED | `app/produit/[slug]`, `components/product-*` | build | — |
+| Cart (persisted, coupons, server actions) | IMPLEMENTED | `app/panier`, `components/cart-client.tsx`, `server/actions/cart.ts` | E2E COD test | — |
+| COD checkout (wilaya cascade, live quote) | IMPLEMENTED | `app/checkout`, `components/checkout-client.tsx`, `server/actions/checkout.ts` | E2E COD test | — |
+| Order confirmation + tracking | IMPLEMENTED | `app/commande/[number]`, `app/suivi` | E2E COD test | — |
+| Visagism (manual + camera → recommendations) | IMPLEMENTED | `app/visagisme`, `components/visagism-*`, `server/actions/visagism.ts` | engine unit-tested; camera live | model files via CDN (see note) |
+| Virtual try-on (2D overlay) | IMPLEMENTED | `components/try-on-modal.tsx` | geometry unit-tested | 3D provider later (by design) |
+| Lens quiz (20Q, one-per-screen) | IMPLEMENTED | `app/quiz`, `components/quiz-runner.tsx`, `server/actions/quiz.ts` | engine unit-tested | — |
+| Customer accounts (register/login/orders) | IMPLEMENTED | `app/compte`, `server/actions/account.ts`, `server/auth.ts` | build | password reset (later) |
+| Guest checkout | IMPLEMENTED | checkout requires no account | E2E COD test | — |
+| Brand/Momus landing, CMS pages | IMPLEMENTED | `app/marques`, `app/page/[slug]` | build | — |
+| SEO (metadata, JSON-LD, breadcrumbs) | PARTIAL | layout + PDP + category metadata | build | sitemap.xml/robots.txt (Phase 7) |
+| Favorites (guest localStorage) | IMPLEMENTED | `components/product-card-actions.tsx` | build | server-side sync when logged in (later) |
+
+> **Note (try-on / visagism model files):** face detection runs **in-browser**
+> (image never leaves the device), but the MediaPipe WASM + model are fetched from
+> a CDN. For fully offline/self-hosted operation, self-host those assets. Falls back
+> gracefully to the manual path / static preview when they cannot load.
 ## Phase 5 — Admin · NOT STARTED
 ## Phase 6 — Generator + Exporter · NOT STARTED
 ## Phase 7 — Hardening · NOT STARTED
