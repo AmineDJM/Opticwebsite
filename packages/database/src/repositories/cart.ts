@@ -1,6 +1,6 @@
 import { prisma } from "../client.js";
 import type { TenantClient } from "../tenant.js";
-import { generateToken } from "@optic/core";
+import { generateToken } from "@optic/core/ids";
 
 /**
  * Cart repository. Carts are persisted (§10) and keyed by a signed token stored in a

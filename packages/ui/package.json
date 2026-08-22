@@ -21,7 +21,7 @@
     "@optic/i18n": "workspace:*",
     "clsx": "^2.1.1",
     "class-variance-authority": "^0.7.1",
-    "lucide-react": "^1.33.0",
+    "lucide-react": "^0.544.0",
     "tailwind-merge": "^3.6.0",
     "@optic/config": "workspace:*",
     "@optic/commerce": "workspace:*"

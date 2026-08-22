@@ -1,6 +1,6 @@
 import { prisma } from "../client.js";
 import type { TenantClient } from "../tenant.js";
-import { generateOrderNumber } from "@optic/core";
+import { generateOrderNumber } from "@optic/core/ids";
 import {
   computeOrderTotals,
   transitionEffect,
