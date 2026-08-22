@@ -88,7 +88,23 @@ Feature · Status · Files · Tests · Remaining work
 > (image never leaves the device), but the MediaPipe WASM + model are fetched from
 > a CDN. For fully offline/self-hosted operation, self-host those assets. Falls back
 > gracefully to the manual path / static preview when they cannot load.
-## Phase 5 — Admin · NOT STARTED
+## Phase 5 — Admin back-office (Application B)
+
+| Feature | Status | Files | Remaining |
+| --- | --- | --- | --- |
+| Auth + RBAC (permission-checked routes/actions) | IMPLEMENTED | `apps/admin/src/server/session.ts`, `actions/auth.ts` | — |
+| Dashboard with COD revenue tiers | IMPLEMENTED | `app/(dash)/page.tsx`, `server/dashboard.ts` | analytics traffic (needs analytics wiring) |
+| Products CRUD + variants + duplicate/archive | IMPLEMENTED | `app/(dash)/produits/*`, `actions/products.ts`, `components/product-form.tsx` | CSV import (later) |
+| Orders list/detail/status/print | IMPLEMENTED | `app/(dash)/commandes/*`, `actions/orders.ts` | — |
+| Categories / brands / coupons | IMPLEMENTED | `app/(dash)/{categories,marques,promotions}`, `actions/catalog-admin.ts` | — |
+| Shipping zones (Algeria rates) | IMPLEMENTED | `app/(dash)/livraison`, `actions/shipping.ts` | carrier API adapters (later) |
+| Customers (read) | IMPLEMENTED | `app/(dash)/clients` | — |
+| CMS / homepage block editor | IMPLEMENTED | `app/(dash)/contenu/*`, `actions/content.ts`, `components/page-editor.tsx` | — |
+| Media library (upload + sharp) | IMPLEMENTED | `app/(dash)/medias`, `api/media/upload` | thumbnails/compression (dimensions done) |
+| Quiz Builder (toggle/edit/weights) | IMPLEMENTED | `app/(dash)/quiz`, `actions/quiz-admin.ts` | add/remove questions UI (edit done) |
+| Settings + feature toggles | IMPLEMENTED | `app/(dash)/parametres`, `actions/settings.ts` | — |
+| Users & roles (RBAC) | IMPLEMENTED | `app/(dash)/utilisateurs`, `actions/users.ts` | custom-permission role editor (templates done) |
+| Audit log | IMPLEMENTED | `app/(dash)/journal`, `server/audit.ts` | — |
 ## Phase 6 — Generator + Exporter · NOT STARTED
 ## Phase 7 — Hardening · NOT STARTED
 ## Phase 8 — Docs & Export test · NOT STARTED
