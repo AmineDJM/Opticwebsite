@@ -32,7 +32,18 @@ Feature · Status · Files · Tests · Remaining work
 | Storage drivers (local + S3) | IMPLEMENTED | `packages/storage/src/*` | 4 unit tests | image processing in Phase 5 |
 | Architecture docs | IMPLEMENTED | `docs/ARCHITECTURE.md` | — | — |
 
-## Phase 2 — Design system & UI · NOT STARTED
+## Phase 2 — Design system & UI
+
+| Feature | Status | Files | Tests | Remaining |
+| --- | --- | --- | --- | --- |
+| Runtime theming (tokens → CSS vars) | IMPLEMENTED | `packages/ui/src/theme-style.tsx`, `tooling/tailwind-config/*` | covered | — |
+| Shared Tailwind preset (semantic colours) | IMPLEMENTED | `tooling/tailwind-config/preset.js` | — | — |
+| Primitives (Button/Input/Select/Textarea/Checkbox/Card/Badge/Alert/Skeleton/Container) | IMPLEMENTED | `packages/ui/src/primitives/*` | 8 tests | — |
+| Accessible forms (labels/aria/errors) | IMPLEMENTED | `packages/ui/src/primitives/form.tsx` | covered | — |
+| State components (empty/error/loading/skeleton) | IMPLEMENTED | `packages/ui/src/states.tsx` | covered | — |
+| PriceDisplay (sale/discount) | IMPLEMENTED | `packages/ui/src/commerce/price.tsx` | covered | — |
+| ProductCard (framework-agnostic Link/Image slots) | IMPLEMENTED | `packages/ui/src/commerce/product-card.tsx` | covered | — |
+| Block sections (Hero/CTA/Advantages/Testimonials/FAQ) | IMPLEMENTED | `packages/ui/src/blocks/sections.tsx` | — | data binding in storefront (Phase 4) |
 ## Phase 3 — Commerce & optical domain (pure, tested)
 
 | Feature | Status | Files | Tests | Remaining |
