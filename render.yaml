@@ -1,22 +1,21 @@
 # ---------------------------------------------------------------------------
 # Render Blueprint — https://render.com/docs/blueprint-spec
 #
-# Deploys the Aura Optique STOREFRONT (Application A) + a managed PostgreSQL
-# database, in one click from the Render dashboard ("New +" → "Blueprint").
+# Deploys the FULL Aura Optique platform — storefront (A), admin back-office (B)
+# and website generator (C) — plus a managed PostgreSQL database, in one click
+# from the Render dashboard ("New +" → "Blueprint").
 #
-# The storefront is a single-tenant deployment pinned to SITE_SLUG=aura-optique.
-# It builds the Next.js app, runs the database migrations + the (idempotent)
-# seed on boot, then serves on Render's $PORT.
+# Storefront and admin are single-tenant deployments pinned to
+# SITE_SLUG=aura-optique; the generator is cross-tenant (platform super-admin).
+# Each service builds its Next.js app, applies the database migrations at boot,
+# runs the (idempotent, non-fatal) seed, then serves on Render's $PORT.
 #
 # Demo images are generated on boot into a local directory (STORAGE_LOCAL_DIR)
-# and served by the app's own /media route — so this Blueprint needs NO external
-# object storage to work. To ALSO deploy the admin back-office (Application B)
-# and share uploaded media between the two services, switch to shared S3/R2
-# storage: see docs/RENDER.md.
+# and served by each app's own /media route — so this Blueprint needs NO
+# external object storage to work. To make admin UPLOADS durable and shared
+# across services, switch all services to S3/R2 storage: see docs/RENDER.md.
 #
-# NOTE ON BRANCH: this Blueprint is set to deploy the feature branch that holds
-# the code. Once it is merged into your default branch, drop the `branch:` lines
-# (or point them at your default branch).
+# Services follow the Blueprint's tracked branch (no per-service branch pins).
 # ---------------------------------------------------------------------------
 
 databases:
@@ -32,7 +31,6 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    branch: claude/ecommerce-optical-generator-1nhhq9
     autoDeploy: true
     healthCheckPath: /
     # Build: install pnpm (via npm — avoids the corepack signing-key bug in the
@@ -92,7 +90,6 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    branch: claude/ecommerce-optical-generator-1nhhq9
     autoDeploy: true
     healthCheckPath: /login
     buildCommand: npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/admin build
@@ -133,7 +130,6 @@ services:
     runtime: node
     plan: free
     region: frankfurt
-    branch: claude/ecommerce-optical-generator-1nhhq9
     autoDeploy: true
     healthCheckPath: /login
     buildCommand: npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/generator build

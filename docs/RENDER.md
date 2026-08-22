@@ -34,8 +34,8 @@ c'est ce qui garantit les mêmes images de démo partout.
 
 ## Prérequis
 
-1. Le code doit être **poussé sur GitHub** (il l'est déjà, sur la branche
-   `claude/ecommerce-optical-generator-1nhhq9`).
+1. Le code doit être **sur la branche `main`** de GitHub (mergez la pull request
+   de la branche de travail si ce n'est pas déjà fait).
 2. Un compte **Render** gratuit : https://dashboard.render.com — connectez-le à
    votre compte GitHub et autorisez l'accès au dépôt `aminedjm/opticwebsite`.
 
@@ -45,9 +45,8 @@ c'est ce qui garantit les mêmes images de démo partout.
 
 1. Sur le dashboard Render : **New +** → **Blueprint**.
 2. Choisissez le dépôt **`aminedjm/opticwebsite`**.
-3. Render détecte `render.yaml`. Il déploie la branche indiquée dans le fichier
-   (`claude/ecommerce-optical-generator-1nhhq9`). Si Render vous demande une
-   branche, choisissez celle-ci.
+3. Render détecte `render.yaml`. Quand il demande une branche, choisissez
+   **`main`** : les services suivent la branche du Blueprint.
 4. Il vous demande de renseigner les variables marquées **sync: false**
    (`NEXT_PUBLIC_STOREFRONT_URL`, `NEXT_PUBLIC_ADMIN_URL`) — laissez-les **vides**
    pour l'instant (les URL n'existent pas encore). On les remplira après le premier
