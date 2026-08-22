@@ -105,6 +105,9 @@ importers:
       '@optic/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint-config
+      '@optic/tailwind-config':
+        specifier: workspace:*
+        version: link:../../tooling/tailwind-config
       '@optic/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
