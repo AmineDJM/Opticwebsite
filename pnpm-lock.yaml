@@ -128,7 +128,7 @@ importers:
         version: 10.5.4(postcss@8.5.26)
       eslint:
         specifier: ^9.18.0
-        version: 9.39.5(jiti@1.21.7)
+        version: 9.39.5(jiti@2.7.0)
       postcss:
         specifier: ^8.5.26
         version: 8.5.26
@@ -140,7 +140,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@22.20.1)(jiti@1.21.7)(jsdom@30.0.1)(tsx@4.23.12)
+        version: 3.2.7(@types/node@22.20.1)(jiti@2.7.0)(jsdom@30.0.1)(tsx@4.23.12)
 
   apps/generator:
     dependencies:
@@ -237,7 +237,7 @@ importers:
         version: 10.5.4(postcss@8.5.26)
       eslint:
         specifier: ^9.18.0
-        version: 9.39.5(jiti@2.7.0)
+        version: 9.39.5(jiti@1.21.7)
       postcss:
         specifier: ^8.5.26
         version: 8.5.26
@@ -249,7 +249,7 @@ importers:
         version: 5.9.3
       vitest:
         specifier: ^3.2.4
-        version: 3.2.7(@types/node@22.20.1)(jiti@2.7.0)(jsdom@30.0.1)(tsx@4.23.12)
+        version: 3.2.7(@types/node@22.20.1)(jiti@1.21.7)(jsdom@30.0.1)(tsx@4.23.12)
 
   apps/storefront:
     dependencies:
@@ -548,6 +548,9 @@ importers:
       '@optic/core':
         specifier: workspace:*
         version: link:../core
+      '@optic/storage':
+        specifier: workspace:*
+        version: link:../storage
       '@prisma/client':
         specifier: ^6.19.3
         version: 6.19.3(prisma@6.19.3(typescript@5.9.3))(typescript@5.9.3)

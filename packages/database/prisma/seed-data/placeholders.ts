@@ -1,5 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, join, resolve } from "node:path";
+import { createStorage } from "@optic/storage";
 
 /**
  * Generates SVG placeholder images for the demo so the storefront is visually
@@ -7,11 +6,19 @@ import { dirname, join, resolve } from "node:path";
  * silhouette on a branded gradient) and clearly not photographs, honouring §43's rule
  * that demo data must be identifiable.
  *
- * Images are written to the local storage dir; Media rows point at `/media/...`.
+ * They are written through the configured storage driver, so with STORAGE_DRIVER=local
+ * they land on disk under `/media/...`, and with STORAGE_DRIVER=s3 they upload to the
+ * bucket (e.g. Cloudflare R2) — which is what lets the storefront and admin share the
+ * same media across two Render services.
  */
 
-const STORAGE_DIR = resolve(process.env.STORAGE_LOCAL_DIR ?? "./var/storage");
-const PUBLIC_PREFIX = process.env.STORAGE_PUBLIC_URL ?? "/media";
+const storage = createStorage();
+
+async function putSvg(key: string, svg: string): Promise<{ url: string; width: number; height: number; bytes: number }> {
+  const buf = Buffer.from(svg, "utf8");
+  const stored = await storage.put(key, buf, { contentType: "image/svg+xml", cacheControl: "public, max-age=86400" });
+  return { url: stored.url, width: 0, height: 0, bytes: buf.byteLength };
+}
 
 function frameSilhouette(shape: string, _stroke: string): string {
   switch (shape) {
@@ -47,11 +54,8 @@ export async function writePlaceholderImage(
   ${opts.sublabel ? `<text x="250" y="392" text-anchor="middle" font-family="system-ui, sans-serif" font-size="16" fill="#ffffff" opacity="0.8">${escapeXml(opts.sublabel)}</text>` : ""}
   <text x="250" y="470" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" fill="#ffffff" opacity="0.55">DÉMO</text>
 </svg>`;
-  const buf = Buffer.from(svg, "utf8");
-  const full = join(STORAGE_DIR, key);
-  await mkdir(dirname(full), { recursive: true });
-  await writeFile(full, buf);
-  return { url: `${PUBLIC_PREFIX}/${key}`, width: 500, height: 500, bytes: buf.byteLength };
+  const out = await putSvg(key, svg);
+  return { ...out, width: 500, height: 500 };
 }
 
 export async function writeBannerImage(
@@ -66,11 +70,8 @@ export async function writeBannerImage(
   </g>
   ${opts.label ? `<text x="120" y="470" font-family="system-ui, sans-serif" font-size="72" font-weight="700" fill="#ffffff">${escapeXml(opts.label)}</text>` : ""}
 </svg>`;
-  const buf = Buffer.from(svg, "utf8");
-  const full = join(STORAGE_DIR, key);
-  await mkdir(dirname(full), { recursive: true });
-  await writeFile(full, buf);
-  return { url: `${PUBLIC_PREFIX}/${key}`, width: 1600, height: 900, bytes: buf.byteLength };
+  const out = await putSvg(key, svg);
+  return { ...out, width: 1600, height: 900 };
 }
 
 export async function writeLogo(key: string, name: string, primary: string, accent: string) {
@@ -79,11 +80,8 @@ export async function writeLogo(key: string, name: string, primary: string, acce
   <circle cx="52" cy="28" r="5" fill="${accent}"/>
   <text x="76" y="36" font-family="Georgia, serif" font-size="26" font-weight="600" fill="${primary}">${escapeXml(name)}</text>
 </svg>`;
-  const buf = Buffer.from(svg, "utf8");
-  const full = join(STORAGE_DIR, key);
-  await mkdir(dirname(full), { recursive: true });
-  await writeFile(full, buf);
-  return { url: `${PUBLIC_PREFIX}/${key}`, width: 220, height: 56, bytes: buf.byteLength };
+  const out = await putSvg(key, svg);
+  return { ...out, width: 220, height: 56 };
 }
 
 function escapeXml(s: string): string {
