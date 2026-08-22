@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProductBySlug, listFeaturedProducts } from "@optic/database";
 import { Container, PriceDisplay, Badge } from "@optic/ui";
-import { formatMoney } from "@optic/core";
+
 import { getTenant } from "../../../server/tenant.js";
 import { Breadcrumbs } from "../../../components/breadcrumbs.js";
 import { ProductPurchase } from "../../../components/product-purchase.js";

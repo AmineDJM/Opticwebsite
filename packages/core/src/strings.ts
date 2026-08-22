@@ -3,6 +3,7 @@
 // Combining diacritical marks (U+0300–U+036F), stripped after NFKD normalization.
 const DIACRITICS = /[\u0300-\u036f]/g;
 // ASCII control characters (U+0000–U+001F) plus DEL (U+007F).
+// eslint-disable-next-line no-control-regex
 const CONTROL_CHARS = /[\u0000-\u001f\u007f]/g;
 
 /**

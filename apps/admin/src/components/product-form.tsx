@@ -3,7 +3,7 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, Save } from "lucide-react";
-import { FRAME_SHAPES, FRAME_MATERIALS, FRAME_TYPES, FACE_SHAPES, parseMoneyToCents, formatMoney } from "@optic/core";
+import { FRAME_SHAPES, FRAME_MATERIALS, FRAME_TYPES, FACE_SHAPES, parseMoneyToCents } from "@optic/core";
 import { Button, Input, Select, Textarea, Card, Checkbox, Alert } from "@optic/ui";
 import { saveProductAction, deleteProductAction, duplicateProductAction } from "../server/actions/products.js";
 
@@ -147,10 +147,10 @@ export function ProductForm({
                 <Input label="SKU" value={v.sku} onChange={(e) => updateVariant(i, { sku: e.target.value })} />
                 <Input label="Nom" value={v.name} onChange={(e) => updateVariant(i, { name: e.target.value })} />
                 <Input label="Couleur" value={v.colorName} onChange={(e) => updateVariant(i, { colorName: e.target.value })} />
-                <div>
-                  <label className="mb-1 block text-sm font-medium">Teinte</label>
-                  <input type="color" value={v.colorHex || "#000000"} onChange={(e) => updateVariant(i, { colorHex: e.target.value })} className="h-10 w-full rounded border border-border" />
-                </div>
+                <label className="block">
+                  <span className="mb-1 block text-sm font-medium">Teinte</span>
+                  <input type="color" aria-label="Teinte" value={v.colorHex || "#000000"} onChange={(e) => updateVariant(i, { colorHex: e.target.value })} className="h-10 w-full rounded border border-border" />
+                </label>
                 <Input label="Taille" value={v.size} onChange={(e) => updateVariant(i, { size: e.target.value })} />
                 <div className="flex items-end gap-2">
                   <Input label="Stock" type="number" value={String(v.stock)} onChange={(e) => updateVariant(i, { stock: Number(e.target.value) })} />

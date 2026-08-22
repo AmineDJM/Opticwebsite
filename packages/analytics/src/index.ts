@@ -91,7 +91,6 @@ export class ConsoleSink implements AnalyticsSink {
   readonly requiresConsent = false;
   emit(event: AnalyticsEvent): void {
     if (process.env.NODE_ENV !== "production") {
-      // eslint-disable-next-line no-console
       console.info(`[analytics] ${event.name}`, event.props ?? {});
     }
   }

@@ -22,7 +22,7 @@ import { hashPassword } from "@optic/auth";
 import { SYSTEM_ROLES } from "@optic/auth";
 import { DEFAULT_QUIZ } from "@optic/quiz-engine";
 import { themeFromPalette } from "@optic/theming";
-import { slugify } from "@optic/core";
+
 import { WILAYAS } from "./seed-data/wilayas.js";
 import {
   AURA_BRANDS, AURA_CATEGORIES, AURA_PRODUCTS, AURA_CONTACT_PRODUCTS, AURA_COUPONS,
@@ -358,7 +358,7 @@ async function seedQuiz(websiteId: string) {
   }
 }
 
-async function seedContent(websiteId: string, categories: Map<string, string>, brands: Map<string, string>) {
+async function seedContent(websiteId: string, _categories: Map<string, string>, _brands: Map<string, string>) {
   console.info("  • Homepage, pages, menus…");
   const hero = await media(websiteId, "banners/hero.svg", await writeBannerImage("banners/hero.svg", { bg: AURA_PRIMARY, accent: AURA_ACCENT, label: "Aura Optique" }), "Aura Optique");
   const momusBanner = await media(websiteId, "banners/momus.svg", await writeBannerImage("banners/momus.svg", { bg: "#123c4a", accent: AURA_ACCENT, label: "Momus" }), "Momus");

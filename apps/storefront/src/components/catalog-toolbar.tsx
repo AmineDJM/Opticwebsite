@@ -60,8 +60,9 @@ export function CatalogToolbar({ total, sort, facets, activeCount }: { total: nu
       </div>
 
       {drawer && (
-        <div className="fixed inset-0 z-50 bg-foreground/40 lg:hidden" onClick={() => setDrawer(false)} role="presentation">
-          <div className="absolute right-0 top-0 h-full w-80 max-w-[85vw] overflow-y-auto bg-background p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button type="button" aria-label="Fermer les filtres" className="absolute inset-0 cursor-default bg-foreground/40" onClick={() => setDrawer(false)} />
+          <div className="absolute right-0 top-0 h-full w-80 max-w-[85vw] overflow-y-auto bg-background p-5">
             <div className="mb-4 flex items-center justify-between">
               <span className="font-heading text-lg font-semibold">Filtres</span>
               <button type="button" onClick={() => setDrawer(false)} aria-label="Fermer"><X size={20} /></button>

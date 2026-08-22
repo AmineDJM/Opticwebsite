@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronUp, ChevronDown, Trash2, Plus, Eye, EyeOff, Save } from "lucide-react";
+import { ChevronUp, ChevronDown, Trash2, Eye, EyeOff, Save } from "lucide-react";
 import { BLOCK_LABELS, BLOCK_TYPES, parseBlockProps, type BlockType } from "@optic/config";
 import { Card, Button, Input, Select, Textarea, Checkbox, Alert, cn } from "@optic/ui";
 import { saveBlocksAction, savePageAction } from "../server/actions/content.js";
@@ -95,11 +95,13 @@ export function PageEditor({ page, blocks: initialBlocks }: { page: Page; blocks
         </div>
 
         <div className="mt-4">
-          <label className="mb-1 block text-sm font-medium">Ajouter un bloc</label>
-          <select onChange={(e) => { if (e.target.value) { addBlock(e.target.value); e.target.value = ""; } }} className="rounded border border-border bg-surface px-3 py-2 text-sm" defaultValue="">
-            <option value="" disabled>Choisir un type…</option>
-            {BLOCK_TYPES.map((t) => <option key={t} value={t}>{BLOCK_LABELS[t]}</option>)}
-          </select>
+          <label className="mb-1 block text-sm font-medium">
+            <span className="mb-1 block">Ajouter un bloc</span>
+            <select onChange={(e) => { if (e.target.value) { addBlock(e.target.value); e.target.value = ""; } }} className="rounded border border-border bg-surface px-3 py-2 text-sm" defaultValue="">
+              <option value="" disabled>Choisir un type…</option>
+              {BLOCK_TYPES.map((t) => <option key={t} value={t}>{BLOCK_LABELS[t]}</option>)}
+            </select>
+          </label>
         </div>
       </div>
 

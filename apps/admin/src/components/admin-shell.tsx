@@ -81,8 +81,9 @@ export function AdminShell({
 
       {/* Mobile drawer */}
       {open && (
-        <div className="fixed inset-0 z-50 bg-foreground/40 lg:hidden" onClick={() => setOpen(false)} role="presentation">
-          <aside className="h-full w-64 bg-surface" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <button type="button" aria-label="Fermer le menu" className="absolute inset-0 cursor-default bg-foreground/40" onClick={() => setOpen(false)} />
+          <aside className="relative h-full w-64 bg-surface">
             <div className="flex items-center justify-between border-b border-border p-4">
               <p className="font-heading font-semibold text-primary">{websiteName}</p>
               <button onClick={() => setOpen(false)} aria-label="Fermer"><X size={20} /></button>

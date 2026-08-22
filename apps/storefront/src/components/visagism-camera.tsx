@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 import { Button, Alert } from "@optic/ui";
-import { measurementsFromPoints, classifyFaceShape, estimateColorimetry, assessFrameQuality, analyzeAutomatic } from "@optic/visagism";
+import { measurementsFromPoints, assessFrameQuality, analyzeAutomatic } from "@optic/visagism";
 
 /**
  * Camera visagism (§15). MediaPipe Face Landmarker runs in-browser on the webcam

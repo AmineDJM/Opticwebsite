@@ -1,14 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
+
 import { z } from "zod";
 import { prisma, loadSiteFromConfig } from "@optic/database";
 import { slugify } from "@optic/core";
 import { getPreset, resolveFeatures, siteConfigSchema, DEFAULT_FEATURES } from "@optic/config";
-import { themeFromPalette, buildPaletteFromColors } from "@optic/theming";
+import { themeFromPalette } from "@optic/theming";
 import { DEFAULT_QUIZ } from "@optic/quiz-engine";
-import { SYSTEM_ROLES, hashPassword } from "@optic/auth";
+import { SYSTEM_ROLES } from "@optic/auth";
 import { requirePlatform } from "../session.js";
 
 /**

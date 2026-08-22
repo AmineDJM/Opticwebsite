@@ -29,7 +29,7 @@ describe("money", () => {
   });
 
   it("formats DZD with no decimals and symbol after", () => {
-    expect(formatMoney(1500000, "DZD").replace(/ /g, " ")).toContain("DA");
+    expect(formatMoney(1500000, "DZD")).toContain("DA");
     expect(formatMoney(1500000, "DZD")).not.toContain(".");
   });
 

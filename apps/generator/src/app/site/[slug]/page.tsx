@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, ExternalLink, Package, ShoppingCart, Users, Download } from "lucide-react";
+import { ArrowLeft, ExternalLink, Package, ShoppingCart, Users } from "lucide-react";
 import { prisma } from "@optic/database";
 import { Container, Card, Badge, buttonVariants } from "@optic/ui";
 import { requirePlatform } from "../../../server/session.js";

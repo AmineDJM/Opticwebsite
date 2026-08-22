@@ -38,7 +38,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         </div>
         <div className="flex items-center gap-3">
           <StatusBadge status={o.status} />
-          <a href={`/impression/${o.id}`} target="_blank" className="inline-flex items-center gap-1.5 rounded border border-border px-3 py-2 text-sm hover:bg-muted"><Printer size={16} /> Imprimer</a>
+          <a href={`/impression/${o.id}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded border border-border px-3 py-2 text-sm hover:bg-muted"><Printer size={16} /> Imprimer</a>
         </div>
       </div>
 

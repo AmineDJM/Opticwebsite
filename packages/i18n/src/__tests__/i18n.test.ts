@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { createTranslator, negotiateLocale, isRtl, direction, getDictionary, DICTIONARIES } from "../index";
+import { createTranslator, negotiateLocale, isRtl, direction, DICTIONARIES } from "../index";
 
 describe("i18n", () => {
   it("translates by dotted path", () => {

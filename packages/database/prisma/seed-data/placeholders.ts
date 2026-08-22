@@ -13,7 +13,7 @@ import { dirname, join, resolve } from "node:path";
 const STORAGE_DIR = resolve(process.env.STORAGE_LOCAL_DIR ?? "./var/storage");
 const PUBLIC_PREFIX = process.env.STORAGE_PUBLIC_URL ?? "/media";
 
-function frameSilhouette(shape: string, stroke: string): string {
+function frameSilhouette(shape: string, _stroke: string): string {
   switch (shape) {
     case "round":
     case "oval":

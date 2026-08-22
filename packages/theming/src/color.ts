@@ -138,6 +138,8 @@ export function ensureContrast(fgHex: string, bgHex: string, target = 4.5): stri
     }
     if (ratio >= target) return candidate;
   }
-  // Last resort: pure black/white.
-  return goDarker ? "#111111" : "#ffffff";
+  // No candidate reached the target: return whichever is stronger — the best hue-
+  // preserving candidate found, or pure black/white.
+  const extreme = goDarker ? "#111111" : "#ffffff";
+  return contrastRatio(extreme, bgHex) > bestRatio ? extreme : best;
 }

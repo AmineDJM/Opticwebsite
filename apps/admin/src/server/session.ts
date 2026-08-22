@@ -51,7 +51,7 @@ export const getAdminContext = cache(async (): Promise<AdminContext | null> => {
   let websiteId: string;
   let websiteName: string;
   let currency: string;
-  let features: Record<string, boolean> = {};
+  const features: Record<string, boolean> = {};
   let permissions: string[];
   let roleKey: string;
 

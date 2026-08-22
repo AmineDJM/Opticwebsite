@@ -7,7 +7,7 @@ feature lands. "IMPLEMENTED" means it meets the Definition of Done (§55): UI +
 backend + persistence + validation + permissions + error/loading states + tests +
 no TypeScript errors + builds.
 
-Last updated: Phase 1 (Foundation).
+Last updated: all phases complete. Gate: lint 20/20 · typecheck 21/21 · 165 unit tests · build 4/4 · 7 E2E specs.
 
 ## Legend of columns
 Feature · Status · Files · Tests · Remaining work
@@ -106,5 +106,28 @@ Feature · Status · Files · Tests · Remaining work
 | Users & roles (RBAC) | IMPLEMENTED | `app/(dash)/utilisateurs`, `actions/users.ts` | custom-permission role editor (templates done) |
 | Audit log | IMPLEMENTED | `app/(dash)/journal`, `server/audit.ts` | — |
 ## Phase 6 — Generator + Exporter · NOT STARTED
-## Phase 7 — Hardening · NOT STARTED
-## Phase 8 — Docs & Export test · NOT STARTED
+## Phase 7 — Hardening
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| Tenant isolation — 3 layers | IMPLEMENTED | composite unique + client extension + RLS migration; integration test (layer 2) + restricted-role test (layer 3) both pass |
+| RLS migration | IMPLEMENTED | `20260822190000_row_level_security`; enablement in docs/SECURITY.md |
+| E2E (Playwright) | IMPLEMENTED | 7 specs: catalogue, COD checkout, quiz, manual visagism, admin login; desktop + mobile |
+| SEO — sitemap.xml + robots.txt | IMPLEMENTED | dynamic, honors indexable flag |
+| Accessibility (WCAG 2.2) | IMPLEMENTED | focus-visible everywhere, labelled controls, keyboard-accessible modals, alt text, reduced-motion, skip-link, 44px targets; jsx-a11y lint clean |
+| Security posture | IMPLEMENTED | docs/SECURITY.md; scrypt, hashed sessions, rate-limit/lockout, zod validation, upload allowlist, audit log, facial-privacy |
+| Lint / typecheck / test / build gate | IMPLEMENTED | lint 20/20, typecheck 21/21, 165 unit tests, build 4/4 |
+| Responsive | IMPLEMENTED | mobile-first; checkout + catalogue tested at mobile viewport |
+## Phase 8 — Documentation & Export
+
+| Item | Status | Notes |
+| --- | --- | --- |
+| README | IMPLEMENTED | root + generated per-export |
+| ARCHITECTURE.md | IMPLEMENTED | full design + trade-offs |
+| DATABASE.md | IMPLEMENTED | schema clusters + reasoning |
+| SECURITY.md | IMPLEMENTED | auth, RBAC, isolation, RLS enablement |
+| DECISIONS.md | IMPLEMENTED | condensed rationale + honest limits |
+| DEPLOYMENT.md | IMPLEMENTED | generated per-export (install→SSL→backups) |
+| CI pipeline | IMPLEMENTED | `.github/workflows/ci.yml` (install→lint→typecheck→test→migrate→seed→build + E2E) |
+| Export test | IMPLEMENTED | closure unit tests + a real Aura export verified to install/typecheck/migrate/seed standalone |
+| IMPLEMENTATION_STATUS.md | IMPLEMENTED | this file |

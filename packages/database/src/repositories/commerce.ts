@@ -86,7 +86,7 @@ export async function getShippingQuote(
   );
 }
 
-export async function listWilayas(db: TenantClient) {
+export async function listWilayas(_db: TenantClient) {
   // Wilayas are global reference data — read from the base client via prisma directly.
   const { prisma } = await import("../client.js");
   return prisma.wilaya.findMany({ orderBy: { code: "asc" }, select: { code: true, nameFr: true, nameAr: true } });

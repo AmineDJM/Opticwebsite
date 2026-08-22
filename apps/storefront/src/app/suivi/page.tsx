@@ -3,7 +3,7 @@ import { Container } from "@optic/ui";
 import { getTenant } from "../../server/tenant.js";
 import { getOrderByNumber } from "@optic/database";
 import { formatMoney } from "@optic/core";
-import { ORDER_STATUS_LABELS, ORDER_STATUSES, type OrderStatus } from "@optic/commerce";
+import { ORDER_STATUS_LABELS, type OrderStatus } from "@optic/commerce";
 import { TrackForm } from "../../components/track-form.js";
 
 export const dynamic = "force-dynamic";

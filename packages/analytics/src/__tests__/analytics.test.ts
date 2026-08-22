@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { AnalyticsBus, ConsoleSink, GA4Sink, createAnalyticsBus, ANALYTICS_EVENTS } from "../index";
+import { AnalyticsBus, GA4Sink, createAnalyticsBus, ANALYTICS_EVENTS } from "../index";
 
 describe("analytics bus", () => {
   it("fires first-party sinks regardless of consent", async () => {

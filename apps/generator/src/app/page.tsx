@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Plus, Globe, Package, ExternalLink } from "lucide-react";
+import { Plus, Globe, Package } from "lucide-react";
 import { prisma } from "@optic/database";
 import { Container, Card, Badge, buttonVariants } from "@optic/ui";
 import { requirePlatform } from "../server/session.js";

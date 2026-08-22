@@ -15,6 +15,7 @@ export class S3StorageDriver implements StorageDriver {
   }
 
   private async getClient() {
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     if (this.client) return this.client as import("@aws-sdk/client-s3").S3Client;
     const { S3Client } = await import("@aws-sdk/client-s3");
     this.client = new S3Client({
@@ -23,6 +24,7 @@ export class S3StorageDriver implements StorageDriver {
       forcePathStyle: this.cfg.forcePathStyle ?? !!this.cfg.endpoint,
       credentials: { accessKeyId: this.cfg.accessKeyId, secretAccessKey: this.cfg.secretAccessKey },
     });
+    // eslint-disable-next-line @typescript-eslint/consistent-type-imports
     return this.client as import("@aws-sdk/client-s3").S3Client;
   }
 

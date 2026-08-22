@@ -58,11 +58,9 @@ export function SearchBox({ placeholder, onClose }: { placeholder: string; onClo
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-foreground/40" onClick={onClose} role="presentation">
-      <div
-        className="mx-auto mt-0 max-w-container bg-background p-4 shadow-lg sm:p-6"
-        onClick={(e) => e.stopPropagation()}
-      >
+    <div className="fixed inset-0 z-50">
+      <button type="button" aria-label="Fermer la recherche" className="absolute inset-0 cursor-default bg-foreground/40" onClick={onClose} />
+      <div className="relative mx-auto mt-0 max-w-container bg-background p-4 shadow-lg sm:p-6">
         <form onSubmit={submit} className="flex items-center gap-3">
           <Search size={20} className="text-muted-foreground" aria-hidden />
           <input

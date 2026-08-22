@@ -1,4 +1,4 @@
-import { prisma } from "../client.js";
+
 import type { TenantClient } from "../tenant.js";
 import { generateToken } from "@optic/core/ids";
 

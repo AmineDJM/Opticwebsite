@@ -1,4 +1,4 @@
-import { clampPageParams, formatMoney, pageToRange } from "@optic/core";
+import { clampPageParams, pageToRange } from "@optic/core";
 import { EmptyState } from "@optic/ui";
 import { requirePermission } from "../../../server/session.js";
 

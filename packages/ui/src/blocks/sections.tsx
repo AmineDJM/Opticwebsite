@@ -70,7 +70,6 @@ export function HeroBlock({
       <div className="absolute inset-0 -z-10 bg-secondary">
         {ImageSlot}
         {!ImageSlot && imageUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
           <img src={imageUrl} alt="" className="h-full w-full object-cover" />
         )}
         <div className="absolute inset-0 bg-black" style={{ opacity: overlay }} aria-hidden="true" />
@@ -119,7 +118,6 @@ export function CtaBlock({
           <div className="relative aspect-[4/3] overflow-hidden rounded">
             {ImageSlot ??
               (imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
                 <img src={imageUrl} alt="" className="h-full w-full object-cover" />
               ) : (
                 <div className="h-full w-full bg-black/10" />
