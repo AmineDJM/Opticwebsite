@@ -134,7 +134,7 @@ s'en charge — il applique seulement les migrations puis démarre) :
     branch: claude/ecommerce-optical-generator-1nhhq9
     autoDeploy: true
     healthCheckPath: /login
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/admin build
+    buildCommand: npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/admin build
     startCommand: pnpm db:migrate:deploy && pnpm --filter @optic/admin exec next start -p $PORT
     envVars:
       - key: NODE_VERSION
@@ -171,6 +171,10 @@ compte de démonstration créé par le seed :
 
 ## Dépannage
 
+- **Build : `corepack … Cannot find matching keyid`** → bug connu de corepack
+  (clés de signature npm périmées dans le runtime Node). C'est pourquoi la
+  `buildCommand` installe pnpm via `npm install -g pnpm@10.33.0` au lieu de
+  `corepack enable`. Gardez cette forme de commande.
 - **Le build échoue sur le lockfile** → vérifiez que `pnpm-lock.yaml` est bien
   commité et à jour (`pnpm install` en local, puis commit).
 - **`No website resolved` au démarrage** → `SITE_SLUG` doit valoir `aura-optique`

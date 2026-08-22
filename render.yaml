@@ -35,9 +35,10 @@ services:
     branch: claude/ecommerce-optical-generator-1nhhq9
     autoDeploy: true
     healthCheckPath: /
-    # Build: install (frozen lockfile), generate the Prisma client, build the app.
-    # Internal @optic/* packages ship TypeScript source, so only the app is built.
-    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/storefront build
+    # Build: install pnpm (via npm — avoids the corepack signing-key bug in the
+    # Node runtime), install deps (frozen lockfile), generate the Prisma client,
+    # build the app. Internal @optic/* packages ship TS source, so only the app builds.
+    buildCommand: npm install -g pnpm@10.33.0 && pnpm install --frozen-lockfile && pnpm db:generate && pnpm --filter @optic/storefront build
     # Boot: apply migrations, run the idempotent seed (creates the brand + demo
     # data and regenerates the demo images into STORAGE_LOCAL_DIR), then serve.
     startCommand: pnpm db:migrate:deploy && pnpm db:seed && pnpm --filter @optic/storefront exec next start -p $PORT
