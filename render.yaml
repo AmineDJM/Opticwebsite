@@ -43,8 +43,12 @@ services:
     # data and regenerates the demo images into STORAGE_LOCAL_DIR), then serve.
     startCommand: pnpm db:migrate:deploy && pnpm db:seed && pnpm --filter @optic/storefront exec next start -p $PORT
     envVars:
+      # Node 22 (latest): Render's runtime auto-runs corepack because of the
+      # `packageManager` field, and older Node bundles a corepack with stale npm
+      # signing keys ("Cannot find matching keyid"). A current Node ships a
+      # corepack with valid keys.
       - key: NODE_VERSION
-        value: "20.18.0"
+        value: "22"
       - key: NODE_ENV
         value: production
       - key: NEXT_TELEMETRY_DISABLED
