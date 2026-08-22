@@ -1,0 +1,17 @@
+{
+  "extends": "@optic/typescript-config/library.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "*.ts",
+    "*.mts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
