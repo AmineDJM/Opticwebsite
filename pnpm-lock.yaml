@@ -433,9 +433,6 @@ importers:
       '@optic/core':
         specifier: workspace:*
         version: link:../core
-      '@optic/database':
-        specifier: workspace:*
-        version: link:../database
       zod:
         specifier: ^3.25.76
         version: 3.25.76
@@ -533,6 +530,15 @@ importers:
 
   packages/database:
     dependencies:
+      '@optic/catalog':
+        specifier: workspace:*
+        version: link:../catalog
+      '@optic/commerce':
+        specifier: workspace:*
+        version: link:../commerce
+      '@optic/config':
+        specifier: workspace:*
+        version: link:../config
       '@optic/core':
         specifier: workspace:*
         version: link:../core
@@ -543,9 +549,21 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
+      '@optic/auth':
+        specifier: workspace:*
+        version: link:../auth
       '@optic/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint-config
+      '@optic/i18n':
+        specifier: workspace:*
+        version: link:../i18n
+      '@optic/quiz-engine':
+        specifier: workspace:*
+        version: link:../quiz-engine
+      '@optic/theming':
+        specifier: workspace:*
+        version: link:../theming
       '@optic/typescript-config':
         specifier: workspace:*
         version: link:../../tooling/typescript-config
