@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -9,9 +10,12 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
  * database and runs the specs. Mobile viewport is included because the checkout and
  * catalogue must excel on phones (§31).
  */
-// Use the environment's pre-installed Chromium when present (its build may differ
-// from the pinned @playwright/test); fall back to Playwright's managed browser.
-const CHROME_PATH = process.env.PLAYWRIGHT_CHROMIUM_PATH || "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
+// Use an explicitly provided or pre-installed Chromium when it actually exists (its
+// build may differ from the pinned @playwright/test) — otherwise leave it undefined so
+// Playwright uses its own managed browser (what `playwright install` provides in CI).
+const SANDBOX_CHROMIUM = "/opt/pw-browsers/chromium-1194/chrome-linux/chrome";
+const CHROME_PATH =
+  process.env.PLAYWRIGHT_CHROMIUM_PATH ?? (existsSync(SANDBOX_CHROMIUM) ? SANDBOX_CHROMIUM : undefined);
 const STOREFRONT_PORT = 3100;
 const ADMIN_PORT = 3101;
 const env = {
